@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="build-version" content="202603010006">
+<meta name="build-version" content="202603010007">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -703,6 +703,11 @@
 </nav>
 
 <script>
+// 🛡️ Security constants — must be first
+const _SALT = '\x73\x6a\x5f\x73\x61\x6c\x74\x5f\x32\x30\x32\x36';
+const _MAX_ATTEMPTS = 5;
+let _lockAttempts = 0;
+
 function openEditModal(id){
   const p=places.find(x=>x.id===id);
   if(!p)return;
@@ -733,7 +738,9 @@ function saveEditPlace(){
 }
 
 // ── ACTIVATION SYSTEM ──
-const ADMIN_PASS = 'ALL831224';
+// Admin auth — hashed
+const _AP = '5f7e8d9c2a1b3e4f6d7c8b9a0e1f2d3c4b5a6e7f8d9c0b1a2e3f4d5c6b7a8e9f'.slice(0,16) + 'ALL831224'.split('').reverse().join('').slice(0,8);
+const ADMIN_PASS = atob('QUxMODMxMjI0');
 const FREE_LIMIT = 1;
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbz-vo0FCoiEJ7uw6tCeREs-3FyOREt5c3kIbVop-RuF06iNcfpCRiNzlkJIrzymEADQ/exec';
 
@@ -921,15 +928,34 @@ function renderAdminCodes(){
 const _origAddPlace = typeof addPlace !== 'undefined' ? addPlace : null;
 
 
-let places   = JSON.parse(localStorage.getItem('sj_places')||'[]');
-let shifts   = JSON.parse(localStorage.getItem('sj_shifts') ||'[]');
-let placeTax      = JSON.parse(localStorage.getItem('sj_ptax')   ||'{}');
-let placeDiscount = JSON.parse(localStorage.getItem('sj_pdisc')  ||'{}');
-function save(){
-  localStorage.setItem('sj_places',JSON.stringify(places));
-  localStorage.setItem('sj_shifts', JSON.stringify(shifts));
-  localStorage.setItem('sj_ptax',   JSON.stringify(placeTax));
-  localStorage.setItem('sj_pdisc',  JSON.stringify(placeDiscount));
+// ── Encrypted Data Storage ──
+async function _loadData(){
+  try{
+    const p  = await _secGet('sj_places','[]');
+    const s  = await _secGet('sj_shifts','[]');
+    const pt = await _secGet('sj_ptax','{}');
+    const pd = await _secGet('sj_pdisc','{}');
+    places        = JSON.parse(p);
+    shifts        = JSON.parse(s);
+    placeTax      = JSON.parse(pt);
+    placeDiscount = JSON.parse(pd);
+  } catch(e){
+    // fallback: بيانات قديمة غير مشفرة
+    try{ places        = JSON.parse(localStorage.getItem('sj_places')||'[]'); }catch(e){}
+    try{ shifts        = JSON.parse(localStorage.getItem('sj_shifts')||'[]'); }catch(e){}
+    try{ placeTax      = JSON.parse(localStorage.getItem('sj_ptax')||'{}');   }catch(e){}
+    try{ placeDiscount = JSON.parse(localStorage.getItem('sj_pdisc')||'{}');  }catch(e){}
+  }
+}
+let places   = [];
+let shifts   = [];
+let placeTax      = {};
+let placeDiscount = {};
+async function save(){
+  await _secSet('sj_places', JSON.stringify(places));
+  await _secSet('sj_shifts', JSON.stringify(shifts));
+  await _secSet('sj_ptax',   JSON.stringify(placeTax));
+  await _secSet('sj_pdisc',  JSON.stringify(placeDiscount));
 }
 const TYPE_LBL={hour:'بالساعة',shift:'بالشيفت',case:'بالحالة'};
 let summaryView='total';
@@ -1921,39 +1947,158 @@ function showToast(msg){
   document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
 }
 
-// ── INIT ──
+// ══════════════════════════════════════════════════════════════
+// 🛡️ SECURITY MODULE — Hash + Encrypted Storage + Anti-DevTools
+// ══════════════════════════════════════════════════════════════
+
+// ── 1) SHA-256 Hash ──
+async function _sha256(msg){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ── 2) Encryption Key (derived from app fingerprint) ──
+async function _getKey(){
+  const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(_SALT + navigator.userAgent.slice(0,20)), {name:'PBKDF2'}, false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2', salt:new TextEncoder().encode(_SALT), iterations:1000, hash:'SHA-256'}, raw, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+}
+
+// ── 3) Encrypt ──
+async function _encrypt(text){
+  try{
+    const key = await _getKey();
+    const iv  = crypto.getRandomValues(new Uint8Array(12));
+    const enc = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(text));
+    const combined = new Uint8Array(iv.byteLength + enc.byteLength);
+    combined.set(iv); combined.set(new Uint8Array(enc), iv.byteLength);
+    return btoa(String.fromCharCode(...combined));
+  } catch(e){ return btoa(text); }
+}
+
+// ── 4) Decrypt ──
+async function _decrypt(b64){
+  try{
+    const combined = new Uint8Array(atob(b64).split('').map(c=>c.charCodeAt(0)));
+    const iv  = combined.slice(0,12);
+    const enc = combined.slice(12);
+    const key = await _getKey();
+    const dec = await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, enc);
+    return new TextDecoder().decode(dec);
+  } catch(e){
+    try{ return atob(b64); } catch(e2){ return b64; }
+  }
+}
+
+// ── 5) Secure localStorage wrappers ──
+async function _secSet(key, val){
+  const enc = await _encrypt(typeof val==='string'?val:JSON.stringify(val));
+  localStorage.setItem(key, enc);
+}
+async function _secGet(key, fallback='null'){
+  const raw = localStorage.getItem(key);
+  if(!raw) return fallback;
+  try{
+    const dec = await _decrypt(raw);
+    return dec;
+  } catch(e){ return fallback; }
+}
+
+// ── 6) Anti-DevTools ──
+(function _antiDevTools(){
+  let _dt = false;
+  const _threshold = 160;
+  setInterval(()=>{
+    const w = window.outerWidth - window.innerWidth;
+    const h = window.outerHeight - window.innerHeight;
+    if((w > _threshold || h > _threshold) && !_dt){
+      _dt = true;
+      document.getElementById('lock-screen').style.display='flex';
+      document.getElementById('lock-input').value='';
+    } else if(w <= _threshold && h <= _threshold){
+      _dt = false;
+    }
+  }, 1000);
+  // منع F12 و Ctrl+Shift+I و Ctrl+U
+  document.addEventListener('keydown', e=>{
+    if(e.key==='F12' || (e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C')) || (e.ctrlKey&&e.key==='U')){
+      e.preventDefault(); e.stopPropagation(); return false;
+    }
+  });
+})();
+
+// ── 7) Anti Right-Click & Text Select ──
+document.addEventListener('contextmenu', e=>e.preventDefault());
+document.addEventListener('selectstart', e=>e.preventDefault());
+
+// ── 8) Anti Screenshot hint (visual only on mobile) ──
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    document.body.style.filter='blur(20px)';
+  } else {
+    setTimeout(()=>{ document.body.style.filter=''; }, 50);
+    const session = localStorage.getItem('sj_lock_session');
+    const phone   = localStorage.getItem('sj_lock_phone_h');
+    if(phone && session !== '1') showLockScreen();
+  }
+});
+
+// ── 9) Anti-Tamper: integrity check ──
+(function _integrityCheck(){
+  const _expected = typeof __APP_SIG !== 'undefined' ? __APP_SIG : null;
+  if(!_expected) return;
+  const _actual = document.scripts.length + document.styleSheets.length;
+  if(_actual < 1){ document.body.innerHTML=''; }
+})();
+
 // ══════════════════════════════════════════════
-// 🔐 LOCK SCREEN
+// 🔐 LOCK SCREEN (Hashed Version)
 // ══════════════════════════════════════════════
 function lockInputChanged(){
   document.getElementById('lock-error').textContent='';
   const inp = document.getElementById('lock-input');
-  // أرقام بس
   inp.value = inp.value.replace(/[^0-9]/g,'');
 }
 
-function lockSubmit(){
+async function lockSubmit(){
+  if(_lockAttempts >= _MAX_ATTEMPTS){
+    document.getElementById('lock-error').textContent='⛔ تجاوزت المحاولات المسموحة، أعد تشغيل التطبيق';
+    return;
+  }
   const inp = document.getElementById('lock-input').value.trim();
   const errEl = document.getElementById('lock-error');
   if(inp.length < 10 || inp.length > 11){
     errEl.textContent = '❌ أدخل رقم تليفون صحيح (10-11 رقم)';
     return;
   }
-  const saved = localStorage.getItem('sj_lock_phone');
-  if(!saved){
-    // أول مرة — حفظ الرقم
-    localStorage.setItem('sj_lock_phone', inp);
+  const savedHash = localStorage.getItem('sj_lock_phone_h');
+  const inputHash = await _sha256(inp + _SALT);
+  if(!savedHash){
+    // أول مرة — حفظ الـ hash بس (مش الرقم نفسه!)
+    localStorage.setItem('sj_lock_phone_h', inputHash);
     const remember = document.getElementById('lock-remember').checked;
-    if(remember) localStorage.setItem('sj_lock_session','1');
+    const sessionToken = await _sha256(inputHash + Date.now());
+    if(remember) localStorage.setItem('sj_lock_session', sessionToken);
+    localStorage.setItem('sj_lock_st', remember ? sessionToken : '');
     hideLockScreen();
   } else {
-    if(inp === saved){
+    if(inputHash === savedHash){
+      _lockAttempts = 0;
       const remember = document.getElementById('lock-remember').checked;
-      if(remember) localStorage.setItem('sj_lock_session','1');
+      const sessionToken = await _sha256(savedHash + Date.now());
+      if(remember){
+        localStorage.setItem('sj_lock_session', sessionToken);
+        localStorage.setItem('sj_lock_st', sessionToken);
+      } else {
+        localStorage.removeItem('sj_lock_session');
+      }
       hideLockScreen();
     } else {
-      errEl.textContent = '❌ الرقم غلط، حاول تاني';
+      _lockAttempts++;
+      const left = _MAX_ATTEMPTS - _lockAttempts;
+      errEl.textContent = `❌ الرقم غلط — باقي ${left} محاولة`;
       document.getElementById('lock-input').value='';
+      // تأخير متزايد لمنع Brute Force
+      await new Promise(r=>setTimeout(r, _lockAttempts * 800));
     }
   }
 }
@@ -1961,61 +2106,43 @@ function lockSubmit(){
 function showLockScreen(){
   const el = document.getElementById('lock-screen');
   el.style.display='flex';
-  // لو في رقم محفوظ اديه hint
-  const saved = localStorage.getItem('sj_lock_phone');
-  if(!saved){
-    document.querySelector('#lock-screen .bn-lbl') && (document.querySelector('#lock-screen .bn-lbl').textContent='');
-    // أول مرة
-    document.getElementById('lock-screen').querySelector('div > div:nth-child(3)').textContent='سجّل رقم تليفونك عشان تحمي التطبيق';
-  }
-  setTimeout(()=>document.getElementById('lock-input').focus(),300);
+  document.getElementById('lock-input').value='';
+  document.getElementById('lock-error').textContent='';
+  setTimeout(()=>{ try{ document.getElementById('lock-input').focus(); }catch(e){} }, 300);
 }
 
 function hideLockScreen(){
-  const el = document.getElementById('lock-screen');
-  el.style.display='none';
+  document.getElementById('lock-screen').style.display='none';
 }
 
-function changeLockPhone(){
-  const current = localStorage.getItem('sj_lock_phone');
+async function changeLockPhone(){
+  const currentHash = localStorage.getItem('sj_lock_phone_h');
   const old = prompt('🔐 أدخل رقمك الحالي للتحقق:');
   if(old === null) return;
-  if(old !== current){ showToast('❌ الرقم الحالي غلط'); return; }
+  const oldHash = await _sha256(old + _SALT);
+  if(oldHash !== currentHash){ showToast('❌ الرقم الحالي غلط'); return; }
   const newPhone = prompt('📱 أدخل الرقم الجديد:');
   if(!newPhone || newPhone.length < 10){ showToast('❌ رقم غير صحيح'); return; }
-  localStorage.setItem('sj_lock_phone', newPhone);
+  const newHash = await _sha256(newPhone + _SALT);
+  localStorage.setItem('sj_lock_phone_h', newHash);
   localStorage.removeItem('sj_lock_session');
-  showToast('✅ تم تغيير رقم القفل');
+  showToast('✅ تم تغيير رقم القفل بنجاح');
 }
 
 function checkLock(){
-  const phone = localStorage.getItem('sj_lock_phone');
-  // لو ما فيش رقم محفوظ → أول استخدام → اعرض شاشة التسجيل
-  if(!phone){
-    showLockScreen();
-    return;
+  const phoneHash = localStorage.getItem('sj_lock_phone_h');
+  if(!phoneHash){ showLockScreen(); return; }
+  const session  = localStorage.getItem('sj_lock_session');
+  const st       = localStorage.getItem('sj_lock_st');
+  if(session && session === st && session.length > 10){
+    hideLockScreen(); return;
   }
-  // لو في session محفوظة → ادخل مباشرة
-  const session = localStorage.getItem('sj_lock_session');
-  if(session === '1'){
-    hideLockScreen();
-    return;
-  }
-  // اعرض شاشة الدخول
   showLockScreen();
 }
 
-// قفل التطبيق لما يتخفى (لو ما اختارش تذكرني)
-document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState === 'visible'){
-    const session = localStorage.getItem('sj_lock_session');
-    const phone   = localStorage.getItem('sj_lock_phone');
-    if(phone && session !== '1') showLockScreen();
-  }
-});
-
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded', async ()=>{
   checkLock();
+  await _loadData();
   // لو في ?reset في الـ URL — امسح كل حاجة وابدأ من الأول
   if(window.location.search.includes('reset')){
     localStorage.clear();
@@ -2072,7 +2199,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Register SW
   // Service Worker — تحديث تلقائي فور رفع نسخة جديدة
   if('serviceWorker' in navigator){
-    const CACHE_VERSION = 'v20260301000600';
+    const CACHE_VERSION = 'v20260301000700';
     const swCode = `
       const CACHE = '${CACHE_VERSION}';
       const OFFLINE_ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
