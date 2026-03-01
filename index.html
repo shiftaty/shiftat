@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="build-version" content="202603010005">
+<meta name="build-version" content="202603010006">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -288,6 +288,29 @@
 </style>
 </head>
 <body>
+
+<!-- ══ LOCK SCREEN ══ -->
+<div id="lock-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:30px;">
+  <div style="width:100%;max-width:360px;text-align:center;">
+    <div style="font-size:3.5rem;margin-bottom:16px;">🔐</div>
+    <div style="font-size:1.5rem;font-weight:900;color:var(--cyan);margin-bottom:6px;">شيفتاتي</div>
+    <div style="font-size:.85rem;color:var(--muted);margin-bottom:32px;">أدخل رقم تليفونك للدخول</div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:20px;padding:24px;">
+      <div style="font-size:.75rem;color:var(--muted);font-weight:700;margin-bottom:10px;text-align:right;">📱 رقم التليفون</div>
+      <input id="lock-input" type="tel" placeholder="01xxxxxxxxx" maxlength="11"
+        style="width:100%;background:var(--s2);border:1px solid rgba(255,255,255,0.08);border-radius:13px;padding:14px 16px;color:var(--text);font-family:Cairo,sans-serif;font-size:1.2rem;outline:none;text-align:center;letter-spacing:3px;box-sizing:border-box;"
+        oninput="lockInputChanged()" onkeydown="if(event.key==='Enter')lockSubmit()">
+      <div id="lock-error" style="color:var(--red);font-size:.78rem;margin-top:8px;min-height:20px;"></div>
+      <button onclick="lockSubmit()" style="width:100%;margin-top:12px;padding:14px;background:linear-gradient(135deg,var(--violet),var(--cyan));border:none;border-radius:13px;color:#fff;font-family:Cairo,sans-serif;font-weight:900;font-size:1rem;cursor:pointer;">دخول ⚡</button>
+      <div style="margin-top:18px;display:flex;align-items:center;gap:8px;justify-content:center;">
+        <input type="checkbox" id="lock-remember" style="width:16px;height:16px;accent-color:var(--cyan);cursor:pointer;">
+        <label for="lock-remember" style="font-size:.82rem;color:var(--muted);cursor:pointer;">تذكرني (ما تسألنيش تاني)</label>
+      </div>
+    </div>
+    <div style="margin-top:20px;font-size:.72rem;color:var(--muted);opacity:.6;">🔒 بياناتك محمية على جهازك بس</div>
+  </div>
+</div>
+
 <div class="wrap">
   <div class="header">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -536,7 +559,9 @@
       <button class="btn" onclick="exportAndShare()" style="background:linear-gradient(135deg,#1a73e8,#00e5ff);color:#fff;width:100%;padding:15px;font-size:.95rem;"><span id="export-pdf-lbl">📤 تصدير ومشاركة</span></button>
     </div>
     <div style="height:10px;"></div>
-  </div>
+    <div style="text-align:center;margin-bottom:6px;">
+      <button onclick="changeLockPhone()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:7px 18px;color:var(--muted);font-family:Cairo,sans-serif;font-size:.72rem;cursor:pointer;">🔐 تغيير رقم القفل</button>
+    </div>
 
 </div><!-- /wrap -->
 
@@ -1897,7 +1922,100 @@ function showToast(msg){
 }
 
 // ── INIT ──
+// ══════════════════════════════════════════════
+// 🔐 LOCK SCREEN
+// ══════════════════════════════════════════════
+function lockInputChanged(){
+  document.getElementById('lock-error').textContent='';
+  const inp = document.getElementById('lock-input');
+  // أرقام بس
+  inp.value = inp.value.replace(/[^0-9]/g,'');
+}
+
+function lockSubmit(){
+  const inp = document.getElementById('lock-input').value.trim();
+  const errEl = document.getElementById('lock-error');
+  if(inp.length < 10 || inp.length > 11){
+    errEl.textContent = '❌ أدخل رقم تليفون صحيح (10-11 رقم)';
+    return;
+  }
+  const saved = localStorage.getItem('sj_lock_phone');
+  if(!saved){
+    // أول مرة — حفظ الرقم
+    localStorage.setItem('sj_lock_phone', inp);
+    const remember = document.getElementById('lock-remember').checked;
+    if(remember) localStorage.setItem('sj_lock_session','1');
+    hideLockScreen();
+  } else {
+    if(inp === saved){
+      const remember = document.getElementById('lock-remember').checked;
+      if(remember) localStorage.setItem('sj_lock_session','1');
+      hideLockScreen();
+    } else {
+      errEl.textContent = '❌ الرقم غلط، حاول تاني';
+      document.getElementById('lock-input').value='';
+    }
+  }
+}
+
+function showLockScreen(){
+  const el = document.getElementById('lock-screen');
+  el.style.display='flex';
+  // لو في رقم محفوظ اديه hint
+  const saved = localStorage.getItem('sj_lock_phone');
+  if(!saved){
+    document.querySelector('#lock-screen .bn-lbl') && (document.querySelector('#lock-screen .bn-lbl').textContent='');
+    // أول مرة
+    document.getElementById('lock-screen').querySelector('div > div:nth-child(3)').textContent='سجّل رقم تليفونك عشان تحمي التطبيق';
+  }
+  setTimeout(()=>document.getElementById('lock-input').focus(),300);
+}
+
+function hideLockScreen(){
+  const el = document.getElementById('lock-screen');
+  el.style.display='none';
+}
+
+function changeLockPhone(){
+  const current = localStorage.getItem('sj_lock_phone');
+  const old = prompt('🔐 أدخل رقمك الحالي للتحقق:');
+  if(old === null) return;
+  if(old !== current){ showToast('❌ الرقم الحالي غلط'); return; }
+  const newPhone = prompt('📱 أدخل الرقم الجديد:');
+  if(!newPhone || newPhone.length < 10){ showToast('❌ رقم غير صحيح'); return; }
+  localStorage.setItem('sj_lock_phone', newPhone);
+  localStorage.removeItem('sj_lock_session');
+  showToast('✅ تم تغيير رقم القفل');
+}
+
+function checkLock(){
+  const phone = localStorage.getItem('sj_lock_phone');
+  // لو ما فيش رقم محفوظ → أول استخدام → اعرض شاشة التسجيل
+  if(!phone){
+    showLockScreen();
+    return;
+  }
+  // لو في session محفوظة → ادخل مباشرة
+  const session = localStorage.getItem('sj_lock_session');
+  if(session === '1'){
+    hideLockScreen();
+    return;
+  }
+  // اعرض شاشة الدخول
+  showLockScreen();
+}
+
+// قفل التطبيق لما يتخفى (لو ما اختارش تذكرني)
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible'){
+    const session = localStorage.getItem('sj_lock_session');
+    const phone   = localStorage.getItem('sj_lock_phone');
+    if(phone && session !== '1') showLockScreen();
+  }
+});
+
 document.addEventListener('DOMContentLoaded',()=>{
+  checkLock();
   // لو في ?reset في الـ URL — امسح كل حاجة وابدأ من الأول
   if(window.location.search.includes('reset')){
     localStorage.clear();
@@ -1954,7 +2072,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Register SW
   // Service Worker — تحديث تلقائي فور رفع نسخة جديدة
   if('serviceWorker' in navigator){
-    const CACHE_VERSION = 'v20260301000500';
+    const CACHE_VERSION = 'v20260301000600';
     const swCode = `
       const CACHE = '${CACHE_VERSION}';
       const OFFLINE_ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
