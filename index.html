@@ -1516,7 +1516,7 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
     <div style="margin-bottom:18px;border-radius:16px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,0.12);">
       <div style="background:${color};padding:15px 20px;display:flex;justify-content:space-between;align-items:center;">
         <div style="color:#fff;font-size:16px;font-weight:900;font-family:${F};">🏥 ${d.name}</div>
-        <div style="color:#fff;font-size:17px;font-weight:900;font-family:${F};">${d.total.toLocaleString()} ${isEn?'EGP':'ج'}</div>
+        <div style="color:#fff;font-size:17px;font-weight:900;font-family:${F};white-space:nowrap;">${d.total.toLocaleString()} ${isEn?'EGP':'ج'}</div>
       </div>
       <table style="width:100%;border-collapse:collapse;background:#fff;">
         <tbody>
@@ -1557,8 +1557,8 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
           <div style="font-size:12px;color:#999;font-weight:600;font-family:${F};margin-top:5px;">${isEn?'Shifts':'شيفتات'}</div>
         </td>
         <td style="width:33%;background:#ffffff;border-radius:14px;padding:18px 8px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.08);border-top:4px solid #1a73e8;vertical-align:middle;">
-          <div style="font-size:24px;font-weight:900;color:#1a73e8;font-family:${F};line-height:1.2;">${grossTotal.toLocaleString()} <span style="font-size:14px;">${isEn?'EGP':'ج'}</span></div>
-          <div style="font-size:12px;color:#999;font-weight:600;font-family:${F};margin-top:5px;">${isEn?'Gross Total':'الإجمالي ج'}</div>
+          <div style="font-size:24px;font-weight:900;color:#1a73e8;font-family:${F};line-height:1.2;white-space:nowrap;">${grossTotal.toLocaleString()} <span style="font-size:16px;">${isEn?'EGP':'ج'}</span></div>
+          <div style="font-size:12px;color:#999;font-weight:600;font-family:${F};margin-top:5px;">${isEn?'Gross Total':'الإجمالي'}</div>
         </td>
       </tr>
     </table>
@@ -1649,41 +1649,54 @@ async function exportAndShare(){
       });
     }
 
-    // ── Full HD حقيقي: نكبر العنصر بـ scale قبل الالتقاط ──
-    const SCALE = 1920 / 720;
+    // إنشاء container مؤقت خارج الشاشة — عرض 720px الأصلي
+    const BASE_W = 720;
     const wrap = document.createElement('div');
-    wrap.style.cssText = `position:absolute;left:-9999px;top:0;width:720px;background:#f0f2f8;`;
+    wrap.style.cssText = `position:absolute;left:-9999px;top:0;width:${BASE_W}px;background:#f0f2f8;`;
     wrap.innerHTML = _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, taxAmt, netTotal, taxPct);
     document.body.appendChild(wrap);
 
     // انتظر رسم العناصر بشكل كامل
-    await new Promise(r=>setTimeout(r, 500));
+    await new Promise(r=>setTimeout(r, 600));
 
     const el = wrap.querySelector('#rpt-root') || wrap;
-    const elW = el.offsetWidth  || 720;
-    const elH = el.scrollHeight || el.offsetHeight || 1200;
+    // نقيس الارتفاع الحقيقي بعد الرسم
+    const elHeight = el.scrollHeight || el.offsetHeight || 1200;
 
-    // نطبق الـ scale على العنصر نفسه قبل الالتقاط
-    el.style.transform       = `scale(${SCALE})`;
-    el.style.transformOrigin = 'top left';
-    el.style.width           = `${elW}px`;
-
-    // انتظر تطبيق الـ transform
-    await new Promise(r=>setTimeout(r, 100));
-
+    // خطوة 1: التقاط الصورة بالحجم الأصلي
     const blob = await domtoimage.toBlob(el, {
       bgcolor: '#f0f2f8',
-      width:  Math.round(elW * SCALE),
-      height: Math.round(elH * SCALE),
+      width: BASE_W,
+      height: elHeight,
       style: { overflow: 'visible' }
     });
 
     document.body.removeChild(wrap);
 
-    if(!blob){ showToast('❌ فشل'); return; }
+    if(!blob){ showToast('❌ فشل التقاط الصورة'); return; }
+
+    // خطوة 2: رفع الجودة لـ Full HD (1920px عرض) عبر Canvas
+    const SCALE = 1920 / BASE_W; // ≈ 2.667x
+    const img = await new Promise((res, rej) => {
+      const i = new Image();
+      i.onload = () => res(i);
+      i.onerror = rej;
+      i.src = URL.createObjectURL(blob);
+    });
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = Math.round(BASE_W * SCALE);      // 1920
+    canvas.height = Math.round(elHeight * SCALE);
+    const ctx = canvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const hdBlob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+    if(!hdBlob){ showToast('❌ فشل'); return; }
 
     const fname = `SHIFTATY_${period.replace(/[^\w\u0600-\u06FF]/g,'_')}.png`;
-    const file  = new File([blob], fname, {type:'image/png'});
+    const file  = new File([hdBlob], fname, {type:'image/png'});
 
     // محاولة المشاركة (موبايل)
     if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
@@ -1692,7 +1705,7 @@ async function exportAndShare(){
     }
 
     // fallback: تحميل مباشر
-    const url = URL.createObjectURL(blob);
+    const url = URL.createObjectURL(hdBlob);
     const a   = document.createElement('a');
     a.href = url; a.download = fname;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
