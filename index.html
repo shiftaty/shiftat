@@ -2196,51 +2196,9 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   // تطبيق اللغة المحفوظة
   if(localStorage.getItem('sj_lang') === 'en') applyLang();
 
-  // Register SW
-  // Service Worker — تحديث تلقائي فور رفع نسخة جديدة
+  // Register SW — ملف sw.js منفصل عشان الـ offline يشتغل صح
   if('serviceWorker' in navigator){
-    const CACHE_VERSION = 'v20260301000700';
-    const swCode = `
-      const CACHE = '${CACHE_VERSION}';
-      const OFFLINE_ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
-      self.addEventListener('install', e => {
-        e.waitUntil(
-          caches.open(CACHE).then(c =>
-            Promise.allSettled(OFFLINE_ASSETS.map(a => c.add(a).catch(()=>{})))
-          ).then(() => self.skipWaiting())
-        );
-      });
-      self.addEventListener('activate', e => {
-        e.waitUntil(
-          caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-          ).then(() => self.clients.claim())
-        );
-      });
-      self.addEventListener('fetch', e => {
-        if(e.request.method !== 'GET') return;
-        // للـ HTML: network-first عشان التحديثات توصل فوراً
-        // للباقي: cache-first عشان الـ offline يشتغل
-        const isHTML = e.request.headers.get('accept')?.includes('text/html');
-        e.respondWith(
-          isHTML
-            ? fetch(e.request).then(res => {
-                if(res && res.status === 200) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-                return res;
-              }).catch(() => caches.match(e.request))
-            : caches.match(e.request).then(cached => {
-                const net = fetch(e.request).then(res => {
-                  if(res && res.status === 200) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-                  return res;
-                }).catch(() => cached);
-                return cached || net;
-              })
-        );
-      });
-    `.replace('\${CACHE_VERSION}', CACHE_VERSION);
-    const blob = new Blob([swCode], {type: 'application/javascript'});
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).then(reg => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
       // تحقق من وجود تحديث كل 60 ثانية
       setInterval(() => reg.update(), 60000);
       reg.addEventListener('updatefound', () => {
@@ -2253,14 +2211,13 @@ document.addEventListener('DOMContentLoaded', async ()=>{
             if(!activated && !freeMode){
               window.location.reload();
             } else {
-              // إشعار هادئ بدل الـ reload
               console.log('تحديث جاهز — سيُطبق عند إعادة الفتح');
             }
           }
         });
       });
-    }).catch(e => console.log('SW skipped'));
-    
+    }).catch(e => console.log('SW error:', e));
+
     // تحديث تلقائي بس لو مش مشترك
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       const activated = localStorage.getItem('sj_activated') === 'true';
