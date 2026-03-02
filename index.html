@@ -1581,7 +1581,7 @@ function renderByPlace(){
       <div class="pplace-head">
         <div>
           <div class="pplace-name">🏥 ${d.name} <span class="tag tc" dir="ltr">${(()=>{
-            const PT={hour:isEn?'ساعة':'hr', shift:isEn?'شيفت':'shift', case:isEn?'حالة':'case', custom:isEn?'آخر':'other'};
+            const PT={hour:isEn?'hr':'ساعة', shift:isEn?'shift':'شيفت', case:isEn?'case':'حالة', custom:isEn?'other':'آخر'};
             const unit = d.payType==='custom' ? (d.unitName||(isEn?'other':'آخر')) : (PT[d.payType]||(isEn?'shift':'شيفت'));
             return d.unitCount>0 ? `${d.unitCount} ${unit}` : `${d.count} ${isEn?'shifts':'شيفت'}`;
           })()}</span></div>
