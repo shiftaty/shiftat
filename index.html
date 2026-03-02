@@ -84,6 +84,7 @@
   .grid{display:grid;gap:12px;}
   .g2{grid-template-columns:1fr 1fr;}
   .g3{grid-template-columns:1fr 1fr 1fr;}
+  .g4{grid-template-columns:1fr 1fr 1fr 1fr;}
 
   /* ── FIELD ── */
   .field{display:flex;flex-direction:column;gap:6px;}
@@ -372,11 +373,16 @@
         <div class="grid g2">
           <div class="field">
             <label id="lbl-pay-type">نوع الأجر</label>
-            <select id="p-type">
+            <select id="p-type" onchange="onPlaceTypeChange()">
               <option value="hour" id="opt-hour-p">بالساعة</option>
               <option value="shift" id="opt-shift-p">بالشيفت</option>
               <option value="case" id="opt-case-p">بالحالة</option>
+              <option value="custom" id="opt-custom-p">آخر</option>
             </select>
+          </div>
+          <div class="field" id="p-custom-name-field" style="display:none;">
+            <label id="lbl-custom-name-p">اسم النظام</label>
+            <input type="text" id="p-custom-name" placeholder="مثال: بالزيارة" style="margin-top:0;">
           </div>
           <div class="field"><label id="lbl-price">السعر (جنيه)</label><input type="number" id="p-price" placeholder="0" min="0"></div>
         </div>
@@ -402,15 +408,17 @@
       <div id="l-fields" style="display:none;">
         <div class="div"></div>
         <div class="sec-title" id="lbl-pay-type-section">نوع الأجر والسعر</div>
-        <div class="grid g3" style="margin-bottom:12px;">
+        <div id="pay-type-grid" class="grid g3" style="margin-bottom:12px;">
           <div class="field">
             <label id="lbl-pay-per">نوع الأجر</label>
             <select id="l-pay-type" onchange="onPayTypeChange()">
               <option value="hour" id="opt-hour-l">ساعة</option>
               <option value="shift" id="opt-shift-l">شيفت</option>
               <option value="case" id="opt-case-l">حالة</option>
+              <option value="custom" id="opt-custom-l">آخر</option>
             </select>
           </div>
+          <div class="field" id="l-custom-unit-field" style="display:none;"><label id="lbl-custom-unit">الوحدة</label><input type="text" id="l-custom-unit" placeholder="مثال: زيارة" style="background:var(--s2);border:1px solid rgba(0,229,255,0.35);border-radius:12px;padding:13px 14px;color:var(--text);font-family:Cairo,sans-serif;font-size:.95rem;outline:none;width:100%;" oninput="updatePreview()"></div>
           <div class="field"><label id="lbl-pay-price">السعر</label><input type="number" id="l-pay-price" placeholder="0" min="0" oninput="updatePreview()"></div>
           <div class="field"><label id="l-count-lbl">العدد</label><input type="number" id="l-count" placeholder="0" min="0" oninput="updatePreview()"></div>
         </div>
@@ -562,6 +570,11 @@
     <div style="text-align:center;margin-bottom:6px;">
       <button onclick="changeLockPhone()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:7px 18px;color:var(--muted);font-family:Cairo,sans-serif;font-size:.72rem;cursor:pointer;">🔐 تغيير رقم القفل</button>
     </div>
+    <div style="margin-bottom:16px;">
+      <button onclick="clearAllData()" style="width:100%;background:rgba(255,23,68,0.07);border:1px dashed rgba(255,23,68,0.3);border-radius:14px;padding:14px;color:var(--red);font-family:Cairo,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;" id="clear-all-btn">
+        🗑️ <span id="clear-all-lbl">مسح كل البيانات</span>
+      </button>
+    </div>
 
 </div><!-- /wrap -->
 
@@ -586,6 +599,7 @@
             <option value="hour">بالساعة</option>
             <option value="shift">بالشيفت</option>
             <option value="case">بالحالة</option>
+            <option value="custom">آخر</option>
           </select>
         </div>
         <div class="field"><label>السعر</label><input type="number" id="es-pay-price" min="0"></div>
@@ -618,6 +632,36 @@
   </div>
 </div>
 
+<!-- CLEAR DATA MODAL -->
+<div class="modal-overlay" id="clear-modal" style="z-index:9999;">
+  <div class="modal-box" style="text-align:center;max-width:320px;">
+    <div style="font-size:2.5rem;margin-bottom:8px;">⚠️</div>
+    <div id="clear-modal-title" style="font-size:1rem;font-weight:900;color:var(--red);margin-bottom:6px;">مسح البيانات</div>
+    <div id="clear-modal-sub" style="font-size:.8rem;color:var(--muted);margin-bottom:18px;">اختار إيه اللي عايز تمسحه</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+      <button onclick="clearShiftsOnly()" style="width:100%;background:rgba(255,109,0,0.1);border:1px solid rgba(255,109,0,0.35);border-radius:12px;padding:13px;color:var(--orange);font-family:Cairo,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;">
+        📋 مسح الشيفتات بس
+      </button>
+      <button onclick="clearEverything()" style="width:100%;background:rgba(255,23,68,0.1);border:1px solid rgba(255,23,68,0.35);border-radius:12px;padding:13px;color:var(--red);font-family:Cairo,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;">
+        🗑️ مسح كل حاجة (شيفتات + أماكن)
+      </button>
+    </div>
+    <button onclick="document.getElementById('clear-modal').classList.remove('show')" class="btn btn-out" style="width:100%;padding:11px;">إلغاء</button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal" style="z-index:9999;">
+  <div class="modal-box" style="text-align:center;max-width:300px;">
+    <div style="font-size:2rem;margin-bottom:10px;">🗑️</div>
+    <div id="confirm-msg" style="font-size:.95rem;font-weight:700;margin-bottom:20px;color:var(--text);"></div>
+    <div style="display:flex;gap:10px;">
+      <button id="confirm-yes" class="btn btn-red" style="flex:1;padding:12px;">تأكيد</button>
+      <button onclick="closeConfirm()" class="btn btn-out" style="flex:1;padding:12px;">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT PLACE MODAL -->
 <div class="modal-overlay" id="edit-modal">
   <div class="modal-box">
@@ -628,11 +672,16 @@
       <div class="grid g2">
         <div class="field">
           <label>نوع الأجر</label>
-          <select id="edit-place-type">
+          <select id="edit-place-type" onchange="onEditPlaceTypeChange()">
             <option value="hour">بالساعة</option>
             <option value="shift">بالشيفت</option>
             <option value="case">بالحالة</option>
+            <option value="custom">آخر</option>
           </select>
+        </div>
+        <div class="field" id="edit-custom-name-field" style="display:none;">
+          <label id="lbl-custom-name-edit">اسم النظام</label>
+          <input type="text" id="edit-custom-name" placeholder="مثال: بالزيارة">
         </div>
         <div class="field"><label>السعر (جنيه)</label><input type="number" id="edit-place-price" placeholder="0" min="0"></div>
       </div>
@@ -709,12 +758,16 @@ const _MAX_ATTEMPTS = 5;
 let _lockAttempts = 0;
 
 function openEditModal(id){
+  id=parseInt(id);
   const p=places.find(x=>x.id===id);
   if(!p)return;
   document.getElementById('edit-place-id').value=id;
   document.getElementById('edit-place-name').value=p.name;
   document.getElementById('edit-place-type').value=p.type;
   document.getElementById('edit-place-price').value=p.price;
+  const cf=document.getElementById('edit-custom-name-field');
+  const ci=document.getElementById('edit-custom-name');
+  if(cf && ci){ cf.style.display=p.type==='custom'?'block':'none'; ci.value=p.customName||''; }
   document.getElementById('edit-modal').classList.add('show');
 }
 function closeEditModal(){
@@ -724,11 +777,12 @@ function saveEditPlace(){
   const id=parseInt(document.getElementById('edit-place-id').value);
   const name=document.getElementById('edit-place-name').value.trim();
   const type=document.getElementById('edit-place-type').value;
+  const customName=type==='custom'?(document.getElementById('edit-custom-name').value.trim()||(currentLang==='en'?'Other':'آخر')):'';
   const price=parseFloat(document.getElementById('edit-place-price').value)||0;
   if(!name){showToast('⚠️ أدخل اسم المكان');return;}
   const idx=places.findIndex(x=>x.id===id);
   if(idx===-1)return;
-  places[idx]={...places[idx],name,type,price};
+  places[idx]={...places[idx],name,type,customName,price};
   // تحديث اسم المكان في الشيفتات القديمة
   shifts=shifts.map(s=>s.placeId===id?{...s,placeName:name}:s);
   save();
@@ -957,7 +1011,18 @@ async function save(){
   await _secSet('sj_ptax',   JSON.stringify(placeTax));
   await _secSet('sj_pdisc',  JSON.stringify(placeDiscount));
 }
-const TYPE_LBL={hour:'بالساعة',shift:'بالشيفت',case:'بالحالة'};
+const TYPE_LBL={hour:'بالساعة',shift:'بالشيفت',case:'بالحالة',custom:'آخر'};
+function getTypeLbl(type, customLabel){ return type==='custom' && customLabel ? customLabel : (TYPE_LBL[type]||type); }
+function onPlaceTypeChange(){
+  const v=document.getElementById('p-type').value;
+  const f=document.getElementById('p-custom-name-field');
+  if(f) f.style.display = v==='custom' ? 'block' : 'none';
+}
+function onEditPlaceTypeChange(){
+  const v=document.getElementById('edit-place-type').value;
+  const f=document.getElementById('edit-custom-name-field');
+  if(f) f.style.display = v==='custom' ? 'block' : 'none';
+}
 let summaryView='total';
 let deferredPrompt=null;
 
@@ -1044,23 +1109,79 @@ function addPlace(){
   }
   const name=document.getElementById('p-name').value.trim();
   const type=document.getElementById('p-type').value;
+  const customName=type==='custom'?(document.getElementById('p-custom-name').value.trim()||(currentLang==='en'?'Other':'آخر')):'';
   const price=parseFloat(document.getElementById('p-price').value)||0;
   if(!name){showToast(currentLang==='en'?'⚠️ Enter place name':'⚠️ أدخل اسم المكان');return;}
-  places.push({id:Date.now(),name,type,price});
+  places.push({id:Date.now(),name,type,customName,price});
   save();
   document.getElementById('p-name').value='';
   document.getElementById('p-price').value='';
+  document.getElementById('p-custom-name').value='';
+  document.getElementById('p-custom-name-field').style.display='none';
+  document.getElementById('p-type').value='hour';
   renderPlaces();
   showToast((currentLang==='en'?'✅ Added: ':'✅ تم إضافة ')+name);
 }
+function clearAllData(){
+  const isEn = currentLang === 'en';
+  const modal = document.getElementById('clear-modal');
+  document.getElementById('clear-modal-title').textContent = isEn ? 'Clear Data' : 'مسح البيانات';
+  document.getElementById('clear-modal-sub').textContent = isEn ? 'Choose what to delete' : 'اختار إيه اللي عايز تمسحه';
+  modal.querySelector('button:nth-child(1)').textContent = isEn ? '📋 Clear Shifts Only' : '📋 مسح الشيفتات بس';
+  modal.querySelector('button:nth-child(2)').textContent = isEn ? '🗑️ Clear Everything (Shifts + Places)' : '🗑️ مسح كل حاجة (شيفتات + أماكن)';
+  modal.classList.add('show');
+}
+function clearShiftsOnly(){
+  document.getElementById('clear-modal').classList.remove('show');
+  const isEn = currentLang === 'en';
+  showConfirm(isEn?'Delete ALL shifts? This cannot be undone!':'هتمسح كل الشيفتات؟ مش هترجعها!', ()=>{
+    shifts=[];
+    save();
+    renderShifts();
+    renderSummary();
+    showToast(isEn?'✅ All shifts deleted':'✅ تم مسح كل الشيفتات');
+  });
+}
+function clearEverything(){
+  document.getElementById('clear-modal').classList.remove('show');
+  const isEn = currentLang === 'en';
+  showConfirm(isEn?'Delete ALL data (shifts + places)? Cannot be undone!':'هتمسح كل حاجة (شيفتات + أماكن)؟ مش هترجعها!', ()=>{
+    shifts=[];
+    places=[];
+    placeTax={};
+    placeDiscount={};
+    save();
+    renderPlaces();
+    renderShifts();
+    renderSummary();
+    populateSels();
+    showToast(isEn?'✅ All data cleared':'✅ تم مسح كل البيانات');
+  });
+}
+
+function showConfirm(msg, onYes){
+  const isEn = currentLang === 'en';
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-yes').textContent = isEn ? 'Confirm' : 'تأكيد';
+  document.getElementById('confirm-modal').classList.add('show');
+  document.getElementById('confirm-yes').onclick = function(){ closeConfirm(); onYes(); };
+}
+function closeConfirm(){
+  document.getElementById('confirm-modal').classList.remove('show');
+}
+
 function deletePlace(id){
-  if(!confirm(currentLang==='en'?'Delete this place?':'هتحذف المكان ده؟'))return;
-  places=places.filter(p=>p.id!==id);shifts=shifts.filter(s=>s.placeId!==id);delete placeTax[id];delete placeDiscount[id];
-  save();renderPlaces();
+  id=parseInt(id);
+  const isEn = currentLang === 'en';
+  showConfirm(isEn?'Delete this place?':'هتحذف المكان ده؟', ()=>{
+    places=places.filter(p=>p.id!==id);shifts=shifts.filter(s=>s.placeId!==id);delete placeTax[id];delete placeDiscount[id];
+    save();renderPlaces();
+  });
 }
 function renderPlaces(){
   const isEn = currentLang === 'en';
-  const TLBL = {hour: isEn?'Per Hour':'بالساعة', shift: isEn?'Per Shift':'بالشيفت', case: isEn?'Per Case':'بالحالة'};
+  const TLBL = {hour: isEn?'Per Hour':'بالساعة', shift: isEn?'Per Shift':'بالشيفت', case: isEn?'Per Case':'بالحالة', custom: isEn?'Other':'آخر'};
+  const getPlaceTypeLbl = p => p.type==='custom' && p.customName ? p.customName : (TLBL[p.type]||p.type);
   const el=document.getElementById('places-list');
   const secT=document.getElementById('places-sec-title');
   if(!places.length){
@@ -1073,7 +1194,7 @@ function renderPlaces(){
     <div class="place-item">
       <div class="pi-l">
         <div class="pi-ico">🏥</div>
-        <div><div class="pi-name">${p.name}</div><div class="pi-meta">${TLBL[p.type]} • ${p.price.toLocaleString()} ${isEn?'EGP':'ج'}</div></div>
+        <div><div class="pi-name">${p.name}</div><div class="pi-meta">${getPlaceTypeLbl(p)} • ${p.price.toLocaleString()} ${isEn?'EGP':'ج'}</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <button class="btn btn-out" style="padding:7px 13px;font-size:.78rem;border-color:rgba(0,229,255,0.3);color:var(--cyan);" onclick="openEditModal(${p.id})">✏️ ${isEn?'Edit':'تعديل'}</button>
@@ -1113,9 +1234,28 @@ function onPayTypeChange(){
   const isEn = currentLang === 'en';
   const t=document.getElementById('l-pay-type').value;
   const lbl=document.getElementById('l-count-lbl');
-  if(t==='hour')     lbl.textContent = isEn ? 'Hours'  : 'عدد الساعات';
-  else if(t==='shift')lbl.textContent = isEn ? 'Shifts' : 'عدد الشيفتات';
-  else               lbl.textContent = isEn ? 'Cases'  : 'عدد الحالات';
+  const grid=document.getElementById('pay-type-grid');
+  const customField=document.getElementById('l-custom-unit-field');
+  const customInput=document.getElementById('l-custom-unit');
+
+  if(t==='custom'){
+    // show custom unit field → 4 columns
+    if(customField) customField.style.display='block';
+    if(grid){ grid.classList.remove('g3'); grid.classList.add('g4'); }
+    lbl.textContent = isEn ? 'Count' : 'العدد';
+    // prefill from place customName
+    const pid=document.getElementById('l-place')?.value;
+    if(pid && customInput){
+      const p=places.find(x=>x.id==pid);
+      if(p && p.customName) customInput.value=p.customName;
+    }
+  } else {
+    if(customField) customField.style.display='none';
+    if(grid){ grid.classList.remove('g4'); grid.classList.add('g3'); }
+    if(t==='hour')       lbl.textContent = isEn ? 'Hours'  : 'عدد الساعات';
+    else if(t==='shift') lbl.textContent = isEn ? 'Shifts' : 'عدد الشيفتات';
+    else                 lbl.textContent = isEn ? 'Cases'  : 'عدد الحالات';
+  }
 }
 function gv(id){const el=document.getElementById(id);if(!el)return 0;return parseFloat(el.value)||0;}
 
@@ -1183,6 +1323,7 @@ function saveShift(){
   if(!dateVal){showToast(currentLang==='en'?'⚠️ Select a date':'⚠️ اختر التاريخ');return;}
   const payType=document.getElementById('l-pay-type').value;
   const payPrice=gv('l-pay-price'),count=gv('l-count');
+  const customUnit=payType==='custom'?(document.getElementById('l-custom-unit')?.value.trim()||(p.customName||'آخر')):'';
   const exHC=gv('l-ex-hour-count'),exHP=gv('l-ex-hour-price');
   const exCC=gv('l-ex-case-count'),exCP=gv('l-ex-case-price');
   const exTC=gv('l-ex-tech-count'),exTP=gv('l-ex-tech-price');
@@ -1196,11 +1337,13 @@ function saveShift(){
   const basePay=payPrice*count;
   const extraPay=exHC*exHP+exCC*exCP+exTC*exTP+exOC*exOP+customExtras.reduce((s,r)=>s+r.total,0);
   const total=basePay+extraPay;
-  shifts.push({id:Date.now(),placeId:pid,placeName:p.name,date:dateVal,payType,payPrice,count,
+  shifts.push({id:Date.now(),placeId:pid,placeName:p.name,date:dateVal,payType,payPrice,count,customUnit,
     exHC,exHP,exHourName,exCC,exCP,exCaseName,exTC,exTP,exTechName,exOC,exOP,exOtherName,
     customExtras,extraPay,basePay,total,note});
   save();
-  ['l-pay-price','l-count','l-ex-hour-count','l-ex-hour-price','l-ex-case-count','l-ex-case-price','l-ex-tech-count','l-ex-tech-price','l-ex-other-count','l-ex-other-price','l-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['l-pay-price','l-count','l-ex-hour-count','l-ex-hour-price','l-ex-case-count','l-ex-case-price','l-ex-tech-count','l-ex-tech-price','l-ex-other-count','l-ex-other-price','l-note','l-custom-unit'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const _cuF=document.getElementById('l-custom-unit-field');const _pgF=document.getElementById('pay-type-grid');
+  if(_cuF) _cuF.style.display='none';if(_pgF){_pgF.classList.remove('g4');_pgF.classList.add('g3');}
   document.getElementById('extra-custom-rows').innerHTML='';
   extraRowCount=0;;
   document.getElementById('l-fields').style.display='none';
@@ -1225,10 +1368,11 @@ function renderShifts(){
   const list=getFiltered();
   const isEn = currentLang === 'en';
   if(!list.length){el.innerHTML=`<div class="empty"><div class="ico">📋</div><p>${isEn?'No shifts yet':'لا يوجد شيفتات بعد'}</p></div>`;return;}
-  const PT={hour: isEn?'hr':'ساعة', shift: isEn?'shift':'شيفت', case: isEn?'case':'حالة'};
+  const PT={hour: isEn?'hr':'ساعة', shift: isEn?'shift':'شيفت', case: isEn?'case':'حالة', custom: isEn?'other':'آخر'};
+  const getShiftTypeLbl = s => { if(s.payType==='custom'){ if(s.customUnit) return s.customUnit; const p=places.find(x=>x.id==s.placeId); return p&&p.customName?p.customName:(isEn?'other':'آخر'); } return PT[s.payType]||''; };
   el.innerHTML=list.map(s=>{
     const tags=[];
-    if(s.count)tags.push(`<span class="tag tc">⏱️ ${s.count} ${PT[s.payType]||''} × ${s.payPrice}${isEn?' EGP':'ج'}</span>`);
+    if(s.count)tags.push(`<span class="tag tc" dir="ltr">⏱️ ${s.count} ${getShiftTypeLbl(s)} × ${s.payPrice}${isEn?' EGP':'ج'}</span>`);
     if(s.exHC) tags.push(`<span class="tag tv">⚡ ${s.exHC} ${s.exHourName||(isEn?'Extra Hours':'ساعات إضافية')}</span>`);
     if(s.exCC) tags.push(`<span class="tag tg">🏥 ${s.exCC} ${s.exCaseName||(isEn?'Regular Cases':'حالات عادية')}</span>`);
     if(s.exTC) tags.push(`<span class="tag to">🔬 ${s.exTC} ${s.exTechName||(isEn?'Technique':'تكنيك')}</span>`);
@@ -1253,9 +1397,15 @@ function renderShifts(){
     </div>`;
   }).join('');
 }
-function deleteShift(id){if(!confirm(currentLang==='en'?'Delete this shift?':'هتحذف الشيفت ده؟'))return;shifts=shifts.filter(s=>s.id!==id);save();renderShifts();}
+function deleteShift(id){
+  id=parseInt(id);
+  const isEn = currentLang === 'en';
+  showConfirm(isEn?'Delete this shift?':'هتحذف الشيفت ده؟', ()=>{
+    shifts=shifts.filter(s=>s.id!==id);save();renderShifts();
+  });
+}
 
-function editShift(id){
+function editShift(id){id=parseInt(id);
   const s=shifts.find(x=>x.id===id);
   if(!s)return;
   // ملء أماكن العمل
@@ -1400,8 +1550,13 @@ function renderByPlace(){
   const byPlace={};
   list.forEach(s=>{
     const k=s.placeId+'';
-    if(!byPlace[k])byPlace[k]={name:s.placeName,placeId:s.placeId,base:0,extra:0,total:0,count:0};
+    if(!byPlace[k]){
+      const p=places.find(x=>x.id==s.placeId);
+      byPlace[k]={name:s.placeName,placeId:s.placeId,base:0,extra:0,total:0,count:0,
+        payType:s.payType, unitName: s.customUnit||(p&&p.customName)||null, unitCount:0};
+    }
     byPlace[k].base+=s.basePay;byPlace[k].extra+=s.extraPay;byPlace[k].total+=s.total;byPlace[k].count++;
+    byPlace[k].unitCount+=(s.count||0);
   });
 
   const isEn = currentLang === 'en';
@@ -1425,7 +1580,11 @@ function renderByPlace(){
     return `<div class="pplace-card">
       <div class="pplace-head">
         <div>
-          <div class="pplace-name">🏥 ${d.name} <span class="tag tc">${d.count} ${isEn?'shifts':'شيفت'}</span></div>
+          <div class="pplace-name">🏥 ${d.name} <span class="tag tc" dir="ltr">${(()=>{
+            const PT={hour:isEn?'hr':'ساعة',shift:isEn?'shift':'شيفت',case:isEn?'case':'حالة',custom:isEn?'other':'آخر'};
+            const unit = d.payType==='custom' ? (d.unitName||(isEn?'other':'آخر')) : (PT[d.payType]||isEn?'shift':'شيفت');
+            return d.unitCount>0 ? `${d.unitCount} ${unit}` : `${d.count} ${isEn?'shifts':'شيفت'}`;
+          })()}</span></div>
           <div style="margin-top:4px;">${periodLabel}</div>
         </div>
         <div class="pplace-gross">${d.total.toLocaleString()}${cu}</div>
@@ -1482,7 +1641,8 @@ function exportPDF(){
 // ══════════════════════════════════════════════════════════════
 function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, taxAmt, netTotal, taxPct){
   const F = 'Cairo,Arial,sans-serif';
-  const PT = {hour:isEn?'hr':'ساعة', shift:isEn?'shift':'شيفت', case:isEn?'case':'حالة'};
+  const PT = {hour:isEn?'hr':'ساعة', shift:isEn?'shift':'شيفت', case:isEn?'case':'حالة', custom:isEn?'other':'آخر'};
+  const getReportTypeLbl = s => { if(s.payType==='custom'){ if(s.customUnit) return s.customUnit; const p=places.find(x=>x.id==s.placeId); return p&&p.customName?p.customName:(isEn?'other':'آخر'); } return PT[s.payType]||''; };
   const nPlaces = Object.keys(byPlace).length;
 
   // ── جداول الأماكن ──
@@ -1498,7 +1658,7 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
     let rowsHTML = '';
     d.shifts.forEach((s, i)=>{
       const det = [];
-      if(s.count) det.push(`${s.count} ${PT[s.payType]||''} × ${(s.payPrice||0).toLocaleString()} ${isEn?'EGP':'ج'}`);
+      if(s.count) det.push(`${s.count} ${getReportTypeLbl(s)} × ${(s.payPrice||0).toLocaleString()} ${isEn?'EGP':'ج'}`);
       if(s.exHC) det.push(`⚡ ${s.exHC} ${s.exHourName||'إضافي'}`);
       if(s.exCC) det.push(`${s.exCC} ${s.exCaseName||'عادية'}`);
       if(s.exTC) det.push(`${s.exTC} ${s.exTechName||'تكنيك'}`);
@@ -1896,6 +2056,15 @@ function applyLang(){
   if(optHourP)  optHourP.textContent  = isEn ? 'Per Hour'  : 'بالساعة';
   if(optShiftP) optShiftP.textContent = isEn ? 'Per Shift' : 'بالشيفت';
   if(optCaseP)  optCaseP.textContent  = isEn ? 'Per Case'  : 'بالحالة';
+  const optCustomP = document.getElementById('opt-custom-p');
+  if(optCustomP) optCustomP.textContent = isEn ? 'Other' : 'آخر';
+  // custom name field labels & placeholders
+  s('lbl-custom-name-p',    isEn ? 'System Name'       : 'اسم النظام');
+  s('lbl-custom-name-edit', isEn ? 'System Name'       : 'اسم النظام');
+  const pcn = document.getElementById('p-custom-name');
+  if(pcn) pcn.placeholder = isEn ? 'e.g. Per Visit' : 'مثال: بالزيارة';
+  const ecn = document.getElementById('edit-custom-name');
+  if(ecn) ecn.placeholder = isEn ? 'e.g. Per Visit' : 'مثال: بالزيارة';
 
   // ── LOG PANEL ──
   s('shift-form-title',    isEn ? '➕ New Shift'              : '➕ شيفت جديد');
@@ -1931,6 +2100,11 @@ function applyLang(){
   if(optHourL)  optHourL.textContent  = isEn ? 'Hour'  : 'ساعة';
   if(optShiftL) optShiftL.textContent = isEn ? 'Shift' : 'شيفت';
   if(optCaseL)  optCaseL.textContent  = isEn ? 'Case'  : 'حالة';
+  const optCustomL = document.getElementById('opt-custom-l');
+  if(optCustomL) optCustomL.textContent = isEn ? 'Other' : 'آخر';
+  s('lbl-custom-unit', isEn ? 'Unit' : 'الوحدة');
+  const lcuEl = document.getElementById('l-custom-unit');
+  if(lcuEl && !lcuEl.value) lcuEl.placeholder = isEn ? 'e.g. Visit' : 'مثال: زيارة';
 
   // l-no-place message
   const noPlaceEl = document.getElementById('l-no-place');
@@ -1973,6 +2147,7 @@ function applyLang(){
 
   // ── PRINT / PDF BUTTONS ──
   s('print-btn-lbl',   isEn ? '🖨️ Print'          : '🖨️ طباعة');
+  s('clear-all-lbl',   isEn ? 'Clear All Data'    : 'مسح كل البيانات');
   s('export-pdf-lbl',  isEn ? '📤 Export & Share'  : '📤 تصدير ومشاركة');
 
   // ── SHIFTS PANEL filter placeholder ──
