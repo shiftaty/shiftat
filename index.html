@@ -201,6 +201,7 @@
   .install-banner{display:none;background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(0,229,255,0.1));border:1px solid rgba(0,229,255,0.2);border-radius:16px;padding:16px;margin-bottom:14px;flex-direction:column;gap:10px;}
   .install-banner p{font-size:.85rem;color:var(--text);}
   .install-banner.show{display:flex;}
+  #backup-reminder-banner.show{display:flex!important;}
 
   /* ── EDIT MODAL ── */
   .modal-overlay{position:fixed;inset:0;background:rgba(6,11,20,0.92);z-index:8000;display:none;align-items:center;justify-content:center;padding:20px;}
@@ -286,11 +287,126 @@
     #view-total{display:block!important;}
   }
   .print-hdr{display:none;text-align:center;margin-bottom:16px;}
+
+  /* ── ONBOARDING ── */
+  .ob-slide{min-width:100vw;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px 120px;box-sizing:border-box;}
+  .ob-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);transition:all .3s;}
+  .ob-dot.on{width:24px;border-radius:4px;background:var(--cyan);}
+  @keyframes obPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
 </style>
 </head>
 <body>
 
 <!-- ══ LOCK SCREEN ══ -->
+
+<!-- ══ ONBOARDING ══ -->
+<div id="onboarding-screen" style="display:none;position:fixed;inset:0;z-index:999999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:0;overflow:hidden;">
+
+  <!-- Language toggle -->
+  <div style="position:absolute;top:calc(16px + env(safe-area-inset-top));right:16px;z-index:3;">
+    <div onclick="obToggleLang()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-size:.78rem;font-weight:700;color:#fff;display:inline-flex;align-items:center;gap:6px;-webkit-user-select:none;user-select:none;">
+      🌐 <span id="ob-lang-label">English</span>
+    </div>
+  </div>
+
+  <!-- Progress dots -->
+  <div style="position:absolute;top:calc(20px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:2;">
+    <div class="ob-dot" id="ob-dot-0"></div>
+    <div class="ob-dot" id="ob-dot-1"></div>
+    <div class="ob-dot" id="ob-dot-2"></div>
+    <div class="ob-dot" id="ob-dot-3"></div>
+  </div>
+
+  <!-- Slides container -->
+  <div id="ob-slides" style="width:100%;height:100%;display:flex;transition:transform .4s cubic-bezier(.4,0,.2,1);will-change:transform;">
+
+    <!-- Slide 1 — مرحباً -->
+    <div class="ob-slide" style="background:linear-gradient(160deg,#060b14 0%,#1a0a3d 50%,#0d2040 100%);">
+      <div style="font-size:5rem;margin-bottom:20px;animation:obPulse 2s infinite;">⚡</div>
+      <div style="font-size:2.4rem;font-weight:900;letter-spacing:4px;font-family:Arial Black,Arial;background:linear-gradient(135deg,#00e5ff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;">SHIFTATY</div>
+      <div style="font-size:1rem;font-weight:800;color:var(--text);margin-bottom:14px;" id="ob-s1-sub">شيفتاتي</div>
+      <div id="ob-s1-desc" style="font-size:.92rem;color:var(--muted);line-height:1.8;max-width:300px;text-align:center;">تطبيقك الشخصي لتتبع شيفتاتك<br>وحساب مرتبك بدقة في ثوانٍ</div>
+      <div style="margin-top:24px;background:rgba(0,229,255,0.08);border:1px solid rgba(0,229,255,0.15);border-radius:14px;padding:14px 20px;max-width:300px;width:100%;">
+        <div style="font-size:.78rem;color:var(--cyan);font-weight:800;margin-bottom:8px;" id="ob-s1-for">مخصص لـ</div>
+        <div id="ob-s1-audience" style="font-size:.82rem;color:var(--text);line-height:1.9;">👨‍⚕️ الأطباء وجميع العاملين بالمجال الطبي</div>
+      </div>
+    </div>
+
+    <!-- Slide 2 — إضافة مكان -->
+    <div class="ob-slide" style="background:linear-gradient(160deg,#060b14 0%,#0d2a1a 50%,#061a30 100%);">
+      <div style="width:72px;height:72px;background:linear-gradient(135deg,#00897b,#00e676);border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:22px;box-shadow:0 8px 30px rgba(0,230,118,0.3);">🏥</div>
+      <div id="ob-s2-title" style="font-size:1.3rem;font-weight:900;color:var(--text);margin-bottom:10px;">أضف أماكن عملك</div>
+      <div id="ob-s2-desc" style="font-size:.85rem;color:var(--muted);line-height:1.8;max-width:300px;text-align:center;margin-bottom:22px;">سجّل كل مكان بتشتغل فيه<br>بأسمه وسعره الخاص</div>
+      <!-- Mock UI -->
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:16px;width:100%;max-width:300px;">
+        <div style="font-size:.7rem;color:var(--cyan);font-weight:800;margin-bottom:10px;">🏥 أماكن العمل</div>
+        <div style="background:var(--s2);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.82rem;color:var(--text);font-weight:700;">مستشفى النور</span>
+          <span style="font-size:.78rem;color:var(--cyan);">500 ج/شيفت</span>
+        </div>
+        <div style="background:var(--s2);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.82rem;color:var(--text);font-weight:700;">عيادة الأمل</span>
+          <span style="font-size:.78rem;color:var(--cyan);">80 ج/ساعة</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3 — تسجيل شيفت -->
+    <div class="ob-slide" style="background:linear-gradient(160deg,#060b14 0%,#1a1060 50%,#0d2040 100%);">
+      <div style="width:72px;height:72px;background:linear-gradient(135deg,#7c3aed,#00e5ff);border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:22px;box-shadow:0 8px 30px rgba(124,58,237,0.3);">📝</div>
+      <div id="ob-s3-title" style="font-size:1.3rem;font-weight:900;color:var(--text);margin-bottom:10px;">سجّل شيفتاتك بسهولة</div>
+      <div id="ob-s3-desc" style="font-size:.85rem;color:var(--muted);line-height:1.8;max-width:300px;text-align:center;margin-bottom:22px;">اختار المكان والتاريخ والعدد<br>والتطبيق يحسب كل حاجة تلقائياً</div>
+      <!-- Mock UI -->
+      <div style="background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:16px;width:100%;max-width:300px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div style="background:var(--s2);border-radius:10px;padding:9px 12px;">
+            <div style="font-size:.6rem;color:var(--muted);margin-bottom:3px;">المكان</div>
+            <div style="font-size:.8rem;color:var(--text);font-weight:700;">مستشفى النور</div>
+          </div>
+          <div style="background:var(--s2);border-radius:10px;padding:9px 12px;">
+            <div style="font-size:.6rem;color:var(--muted);margin-bottom:3px;">نوع الأجر</div>
+            <div style="font-size:.8rem;color:var(--text);font-weight:700;">شيفت</div>
+          </div>
+        </div>
+        <div style="background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.2);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:.78rem;color:var(--muted);">الإجمالي المتوقع</span>
+          <span style="font-size:1rem;font-weight:900;color:var(--green);">1,500 ج</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4 — الملخص والتقارير -->
+    <div class="ob-slide" style="background:linear-gradient(160deg,#060b14 0%,#1a2a00 50%,#0d1a30 100%);">
+      <div style="width:72px;height:72px;background:linear-gradient(135deg,#e65100,#ffd600);border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:22px;box-shadow:0 8px 30px rgba(255,109,0,0.3);">💰</div>
+      <div id="ob-s4-title" style="font-size:1.3rem;font-weight:900;color:var(--text);margin-bottom:10px;">ملخص ومرتب فوري</div>
+      <div id="ob-s4-desc" style="font-size:.85rem;color:var(--muted);line-height:1.8;max-width:300px;text-align:center;margin-bottom:22px;">شوف مرتبك الصافي في أي وقت<br>وصدّر تقارير احترافية بضغطة</div>
+      <!-- Mock salary -->
+      <div style="background:linear-gradient(135deg,rgba(124,58,237,0.2),rgba(0,229,255,0.1));border:1px solid rgba(0,229,255,0.2);border-radius:16px;padding:18px;width:100%;max-width:300px;text-align:center;">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:6px;">💰 صافي المرتب</div>
+        <div style="font-size:2.4rem;font-weight:900;background:linear-gradient(135deg,#00e676,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">8,450</div>
+        <div style="font-size:.78rem;color:var(--muted);margin-top:4px;">جنيه مصري</div>
+        <div style="display:flex;justify-content:center;gap:8px;margin-top:12px;">
+          <span style="background:rgba(0,230,118,0.1);color:var(--green);border:1px solid rgba(0,230,118,0.2);border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:700;">🖨️ طباعة</span>
+          <span style="background:rgba(0,229,255,0.1);color:var(--cyan);border:1px solid rgba(0,229,255,0.2);border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:700;">📤 تصدير</span>
+        </div>
+      </div>
+      <!-- CTA -->
+      <button onclick="finishOnboarding()" style="margin-top:24px;width:100%;max-width:300px;background:linear-gradient(135deg,var(--violet),var(--cyan));border:none;border-radius:16px;padding:16px;color:#fff;font-family:Cairo,sans-serif;font-weight:900;font-size:1rem;cursor:pointer;box-shadow:0 6px 25px rgba(124,58,237,0.4);">
+        ابدأ دلوقتي ⚡
+      </button>
+    </div>
+
+  </div><!-- /ob-slides -->
+
+  <!-- Bottom nav buttons -->
+  <div style="position:absolute;bottom:calc(30px + env(safe-area-inset-bottom));left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 24px;" id="ob-nav">
+    <button id="ob-skip-btn" onclick="finishOnboarding()" style="background:transparent;border:none;color:var(--muted);font-family:Cairo,sans-serif;font-size:.82rem;cursor:pointer;padding:8px 4px;"><span id="ob-skip-lbl">تخطي</span></button>
+    <button id="ob-next-btn" onclick="obNext()" style="background:linear-gradient(135deg,var(--violet),var(--cyan));border:none;border-radius:50%;width:52px;height:52px;color:#fff;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 20px rgba(124,58,237,0.4);display:flex;align-items:center;justify-content:center;">›</button>
+  </div>
+
+</div>
+<!-- ══ /ONBOARDING ══ -->
+
 <div id="lock-screen" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:30px;">
   <div style="width:100%;max-width:360px;text-align:center;">
     <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
@@ -363,6 +479,33 @@
     <button onclick="document.getElementById('ios-instructions').style.display='none'" style="margin-top:12px;background:rgba(0,229,255,0.15);border:1px solid var(--cyan);color:var(--cyan);padding:8px 20px;border-radius:10px;font-family:Cairo,sans-serif;font-weight:700;cursor:pointer;">حسناً ✓</button>
   </div>
   <!-- Legacy banners (hidden) -->
+
+
+  <!-- ── Rating Reminder Banner ── -->
+  <div id="rating-reminder-banner" style="display:none;background:linear-gradient(135deg,rgba(255,214,0,0.12),rgba(255,109,0,0.07));border:1px solid rgba(255,214,0,0.25);border-radius:16px;padding:14px 16px;margin-bottom:14px;flex-direction:row;align-items:center;gap:12px;">
+    <div style="font-size:1.6rem;">⭐</div>
+    <div style="flex:1;">
+      <div style="font-size:.8rem;font-weight:800;color:var(--yellow);margin-bottom:2px;" id="rating-banner-title">عجبك التطبيق؟</div>
+      <div style="font-size:.72rem;color:var(--muted);" id="rating-banner-msg">شاركنا رأيك وساعدنا نتطور أكتر 🙏</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      <a href="https://wa.me/201030391975?text=%D8%B9%D8%A7%D9%8A%D8%B2%20%D8%A3%D9%82%D9%8A%D9%91%D9%85%20%D8%AA%D8%B7%D8%A8%D9%8A%D9%82%20%D8%B4%D9%8A%D9%81%D8%AA%D8%A7%D8%AA%D9%8A%20%E2%AD%90" target="_blank" onclick="dismissRatingReminder()" style="background:linear-gradient(135deg,#ffd600,#ff6d00);border:none;border-radius:10px;padding:8px 12px;color:#000;font-family:Cairo,sans-serif;font-weight:800;font-size:.75rem;cursor:pointer;white-space:nowrap;text-decoration:none;display:flex;align-items:center;justify-content:center;" id="rating-banner-btn">⭐ قيّم دلوقتي</a>
+      <button onclick="dismissRatingReminder()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:5px 12px;color:var(--muted);font-family:Cairo,sans-serif;font-size:.7rem;cursor:pointer;" id="rating-dismiss-btn">لاحقاً</button>
+    </div>
+  </div>
+
+  <!-- ── Backup Reminder Banner ── -->
+  <div id="backup-reminder-banner" style="display:none;background:linear-gradient(135deg,rgba(0,230,118,0.12),rgba(0,229,255,0.07));border:1px solid rgba(0,230,118,0.25);border-radius:16px;padding:14px 16px;margin-bottom:14px;flex-direction:row;align-items:center;gap:12px;">
+    <div style="font-size:1.6rem;">💾</div>
+    <div style="flex:1;">
+      <div style="font-size:.8rem;font-weight:800;color:var(--green);margin-bottom:2px;" id="backup-reminder-title">تذكير: نسخ احتياطي</div>
+      <div style="font-size:.72rem;color:var(--muted);" id="backup-reminder-msg">آخر نسخة احتياطية منذ أكثر من 7 أيام</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;">
+      <button onclick="exportBackup();dismissBackupReminder()" style="background:linear-gradient(135deg,#00897b,#00e676);border:none;border-radius:10px;padding:8px 12px;color:#000;font-family:Cairo,sans-serif;font-weight:800;font-size:.75rem;cursor:pointer;white-space:nowrap;" id="backup-reminder-btn">📤 احفظ دلوقتي</button>
+      <button onclick="dismissBackupReminder()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:5px 12px;color:var(--muted);font-family:Cairo,sans-serif;font-size:.7rem;cursor:pointer;" id="backup-dismiss-btn">لاحقاً</button>
+    </div>
+  </div>
   <div class="install-banner" id="install-banner" style="display:none!important;"></div>
   <div class="install-banner" id="ios-banner" style="display:none!important;"></div>
 
@@ -569,14 +712,103 @@
       <button class="btn" onclick="exportAndShare()" style="background:linear-gradient(135deg,#1a73e8,#00e5ff);color:#fff;width:100%;padding:15px;font-size:.95rem;"><span id="export-pdf-lbl">📤 تصدير ومشاركة</span></button>
     </div>
     <div style="height:10px;"></div>
-    <div style="text-align:center;margin-bottom:6px;">
+    
+    <!-- ── العملة ── -->
+    <div style="background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:16px;padding:16px;margin-bottom:12px;">
+      <div style="font-size:.72rem;color:var(--cyan);font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;">🌍 العملة</div>
+      <select id="currency-select" onchange="saveCurrency()" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:Cairo,sans-serif;font-size:.9rem;outline:none;-webkit-appearance:none;">
+        <option value="ج|جنيه مصري">🇪🇬 جنيه مصري — ج</option>
+        <option value="ر.س|ريال سعودي">🇸🇦 ريال سعودي — ر.س</option>
+        <option value="د.إ|درهم إماراتي">🇦🇪 درهم إماراتي — د.إ</option>
+        <option value="د.ك|دينار كويتي">🇰🇼 دينار كويتي — د.ك</option>
+        <option value="د.ب|دينار بحريني">🇧🇭 دينار بحريني — د.ب</option>
+        <option value="ر.ق|ريال قطري">🇶🇦 ريال قطري — ر.ق</option>
+        <option value="ر.ع|ريال عُماني">🇴🇲 ريال عُماني — ر.ع</option>
+        <option value="د.أ|دينار أردني">🇯🇴 دينار أردني — د.أ</option>
+        <option value="ل.ل|ليرة لبنانية">🇱🇧 ليرة لبنانية — ل.ل</option>
+        <option value="ج.س|جنيه سوداني">🇸🇩 جنيه سوداني — ج.س</option>
+        <option value="$|دولار أمريكي">🇺🇸 دولار أمريكي — $</option>
+        <option value="€|يورو">🇪🇺 يورو — €</option>
+        <option value="£|جنيه إسترليني">🇬🇧 جنيه إسترليني — £</option>
+      </select>
+    </div>
+
+    <!-- ── نسخ احتياطي ── -->
+    <div style="background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:16px;padding:16px;margin-bottom:12px;">
+      <div style="font-size:.72rem;color:var(--cyan);font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;">💾 النسخ الاحتياطي</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:12px;line-height:1.6;">احفظ بياناتك واستعدها في أي وقت — يُنصح برفع الملف على Google Drive أو iCloud لحمايته.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="exportBackup()" style="background:linear-gradient(135deg,#00897b,#00e676);border:none;border-radius:12px;padding:12px 8px;color:#000;font-family:Cairo,sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📤 تصدير نسخة</button>
+        <button onclick="document.getElementById('import-file-input').click()" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.35);border-radius:12px;padding:12px 8px;color:#a78bfa;font-family:Cairo,sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📥 استعادة نسخة</button>
+      </div>
+      <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importBackup(event)">
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:6px;">
       <button onclick="changeLockPhone()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:7px 18px;color:var(--muted);font-family:Cairo,sans-serif;font-size:.72rem;cursor:pointer;">🔐 تغيير رقم القفل</button>
+      <a href="https://wa.me/201030391975?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9%20%D9%81%D9%8A%20%D8%AA%D8%B7%D8%A8%D9%8A%D9%82%20%D8%B4%D9%8A%D9%81%D8%AA%D8%A7%D8%AA%D9%8A%20%F0%9F%99%8F" target="_blank" style="background:transparent;border:1px solid rgba(37,211,102,0.3);border-radius:20px;padding:7px 18px;color:#25d366;font-family:Cairo,sans-serif;font-size:.72rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">💬 تواصل معنا</a>
     </div>
     <div style="margin-bottom:16px;">
       <button onclick="clearAllData()" style="width:100%;background:rgba(255,23,68,0.07);border:1px dashed rgba(255,23,68,0.3);border-radius:14px;padding:14px;color:var(--red);font-family:Cairo,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;" id="clear-all-btn">
         🗑️ <span id="clear-all-lbl">مسح كل البيانات</span>
       </button>
     </div>
+
+
+  <!-- ══ STATS ══ -->
+  <div id="panel-stats" class="panel">
+    <div class="card">
+      <div class="ch">
+        <div class="ct">📊 <span>الإحصائيات</span></div>
+      </div>
+      <!-- بطاقات رئيسية -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="background:linear-gradient(135deg,rgba(0,229,255,0.12),rgba(0,229,255,0.04));border:1px solid rgba(0,229,255,0.2);border-radius:16px;padding:16px;text-align:center;">
+          <div style="font-size:.68rem;color:var(--muted);font-weight:700;margin-bottom:6px;">💰 إجمالي الدخل الكلي</div>
+          <div id="stat-total-income" style="font-size:1.35rem;font-weight:900;color:var(--cyan);">0 ج</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(0,230,118,0.12),rgba(0,230,118,0.04));border:1px solid rgba(0,230,118,0.2);border-radius:16px;padding:16px;text-align:center;">
+          <div style="font-size:.68rem;color:var(--muted);font-weight:700;margin-bottom:6px;">📋 عدد الشيفتات الكلي</div>
+          <div id="stat-total-shifts" style="font-size:1.35rem;font-weight:900;color:var(--green);">0</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(124,58,237,0.04));border:1px solid rgba(124,58,237,0.2);border-radius:16px;padding:16px;text-align:center;">
+          <div style="font-size:.68rem;color:var(--muted);font-weight:700;margin-bottom:6px;">📅 متوسط الدخل الشهري</div>
+          <div id="stat-avg-monthly" style="font-size:1.35rem;font-weight:900;color:#a78bfa;">0 ج</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(255,109,0,0.12),rgba(255,109,0,0.04));border:1px solid rgba(255,109,0,0.2);border-radius:16px;padding:16px;text-align:center;">
+          <div style="font-size:.68rem;color:var(--muted);font-weight:700;margin-bottom:6px;">📈 متوسط الشيفتات/شهر</div>
+          <div id="stat-avg-shifts" style="font-size:1.35rem;font-weight:900;color:var(--orange);">0</div>
+        </div>
+      </div>
+
+      <!-- أعلى شهر -->
+      <div style="background:linear-gradient(135deg,rgba(255,214,0,0.1),rgba(255,109,0,0.07));border:1px solid rgba(255,214,0,0.2);border-radius:16px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:.72rem;color:var(--yellow);font-weight:800;margin-bottom:10px;">🏆 أعلى شهر في المرتب</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div id="stat-best-month-name" style="font-size:.95rem;font-weight:800;color:var(--text);">—</div>
+          <div id="stat-best-month-val" style="font-size:1.1rem;font-weight:900;color:var(--yellow);">0 ج</div>
+        </div>
+        <div style="margin-top:6px;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+          <div id="stat-best-month-bar" style="height:100%;width:100%;background:linear-gradient(90deg,var(--yellow),var(--orange));border-radius:2px;"></div>
+        </div>
+      </div>
+
+      <!-- أكثر مكان دخلاً -->
+      <div style="background:linear-gradient(135deg,rgba(0,230,118,0.08),rgba(0,229,255,0.05));border:1px solid rgba(0,230,118,0.15);border-radius:16px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:.72rem;color:var(--green);font-weight:800;margin-bottom:10px;">🏥 أكثر مكان دخلاً</div>
+        <div id="stat-best-place-list" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="color:var(--muted);font-size:.82rem;">لا يوجد بيانات بعد</div>
+        </div>
+      </div>
+
+      <!-- مخطط الدخل الشهري -->
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:16px;padding:16px;">
+        <div style="font-size:.72rem;color:var(--cyan);font-weight:800;margin-bottom:14px;">📊 الدخل الشهري</div>
+        <div id="stat-monthly-chart" style="display:flex;align-items:flex-end;gap:6px;height:90px;"></div>
+        <div id="stat-monthly-labels" style="display:flex;gap:6px;margin-top:6px;"></div>
+      </div>
+    </div>
+  </div>
 
 </div><!-- /wrap -->
 
@@ -751,6 +983,7 @@
   <button class="bnav-btn" type="button" onclick="event.preventDefault();event.stopPropagation();tab('log');return false;"><span class="ico">➕</span><span id="nav-shift-lbl">شيفت</span></button>
   <button class="bnav-btn" type="button" onclick="event.preventDefault();event.stopPropagation();tab('shifts');return false;"><span class="ico">📋</span><span id="nav-log-lbl">السجل</span></button>
   <button class="bnav-btn" type="button" onclick="event.preventDefault();event.stopPropagation();tab('summary');return false;"><span class="ico">💰</span><span id="nav-summary-lbl">الملخص</span></button>
+  <button class="bnav-btn" type="button" onclick="event.preventDefault();event.stopPropagation();tab('stats');return false;"><span class="ico">📊</span><span>إحصائيات</span></button>
 </nav>
 
 <script>
@@ -1013,6 +1246,68 @@ async function save(){
   await _secSet('sj_ptax',   JSON.stringify(placeTax));
   await _secSet('sj_pdisc',  JSON.stringify(placeDiscount));
 }
+
+// ── تصدير نسخة احتياطية ──
+function exportBackup(){
+  const isEn = currentLang === 'en';
+  const backup = {
+    version: 1,
+    date: new Date().toISOString(),
+    places,
+    shifts,
+    placeTax,
+    placeDiscount,
+    activated:   localStorage.getItem('sj_activated') || '',
+    freemode:    localStorage.getItem('sj_freemode')  || '',
+    lang:        localStorage.getItem('sj_lang')      || 'ar',
+    lock_phone:  localStorage.getItem('sj_lock_phone_h') || '',
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const dateStr = new Date().toISOString().split('T')[0];
+  a.href     = url;
+  a.download = 'SHIFTATY_backup_' + dateStr + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 3000);
+  localStorage.setItem('sj_last_backup', Date.now().toString());
+  dismissBackupReminder();
+  showToast(isEn ? '✅ Backup saved! Upload it to Drive/iCloud.' : '✅ تم حفظ النسخة! ارفعها على Drive أو iCloud للحماية.');
+}
+
+// ── استعادة نسخة احتياطية ──
+async function importBackup(event){
+  const isEn = currentLang === 'en';
+  const file = event.target.files[0];
+  event.target.value = '';
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!data.places || !data.shifts){
+      showToast(isEn ? '❌ Invalid backup file' : '❌ الملف غير صالح');
+      return;
+    }
+    const ok = window.confirm(isEn
+      ? 'This will replace ALL current data. Continue?'
+      : 'سيتم استبدال كل البيانات الحالية بالنسخة الاحتياطية. هل تريد المتابعة؟');
+    if(!ok) return;
+    places        = data.places        || [];
+    shifts        = data.shifts        || [];
+    placeTax      = data.placeTax      || {};
+    placeDiscount = data.placeDiscount || {};
+    await save();
+    if(data.activated)  localStorage.setItem('sj_activated',    data.activated);
+    if(data.freemode)   localStorage.setItem('sj_freemode',     data.freemode);
+    if(data.lang)       localStorage.setItem('sj_lang',         data.lang);
+    if(data.lock_phone) localStorage.setItem('sj_lock_phone_h', data.lock_phone);
+    showToast(isEn ? '✅ Data restored successfully!' : '✅ تم استعادة البيانات بنجاح!');
+    renderPlaces(); populateSels(); renderSummary();
+  } catch(e){
+    showToast(isEn ? '❌ Failed to read file' : '❌ فشل قراءة الملف');
+  }
+}
+
 const TYPE_LBL={hour:'بالساعة',shift:'بالشيفت',case:'بالحالة',custom:'آخر'};
 function getTypeLbl(type, customLabel){ return type==='custom' && customLabel ? customLabel : (TYPE_LBL[type]||type); }
 function onPlaceTypeChange(){
@@ -1092,11 +1387,12 @@ function tab(name){
   const panel = document.getElementById('panel-'+name);
   if(!panel) return;
   panel.classList.add('on');
-  const idx=['places','log','shifts','summary'].indexOf(name);
+  const idx=['places','log','shifts','summary','stats'].indexOf(name);
   if(idx>-1) document.querySelectorAll('.bnav-btn')[idx].classList.add('on');
   if(name==='log'){populateSels();resetLog();}
   if(name==='shifts'){populateSels();renderShifts();}
-  if(name==='summary'){renderSummary();}
+  if(name==='summary'){renderSummary();loadCurrency();}
+  if(name==='stats'){renderStats();}
   window.scrollTo({top:0,behavior:'smooth'});
   // منع scroll للأعلى في URL
   if(history.pushState) history.pushState(null, null, window.location.pathname);
@@ -1196,7 +1492,7 @@ function renderPlaces(){
     <div class="place-item">
       <div class="pi-l">
         <div class="pi-ico">🏥</div>
-        <div><div class="pi-name">${p.name}</div><div class="pi-meta">${getPlaceTypeLbl(p)} • ${p.price.toLocaleString()} ${isEn?'EGP':'ج'}</div></div>
+        <div><div class="pi-name">${p.name}</div><div class="pi-meta">${getPlaceTypeLbl(p)} • ${p.price.toLocaleString()} ${getCurrency()}</div></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <button class="btn btn-out" style="padding:7px 13px;font-size:.78rem;border-color:rgba(0,229,255,0.3);color:var(--cyan);" onclick="openEditModal(${p.id})">✏️ ${isEn?'Edit':'تعديل'}</button>
@@ -1314,7 +1610,7 @@ function updatePreview(){
   const customExtra = getCustomExtras().reduce((s,r)=>s+r.total,0);
   const total=base+extra+customExtra;
   const pv=document.getElementById('l-preview');
-  if(total>0){pv.style.display='block';document.getElementById('l-preview-val').textContent=total.toLocaleString()+' ج';}
+  if(total>0){pv.style.display='block';document.getElementById('l-preview-val').textContent=total.toLocaleString()+' '+getCurrency();}
   else pv.style.display='none';
 }
 function saveShift(){
@@ -1352,7 +1648,7 @@ function saveShift(){
   document.getElementById('l-no-place').style.display='block';
   document.getElementById('l-preview').style.display='none';
   document.getElementById('l-place').value='';
-  showToast((currentLang==='en'?'✅ Saved! Total: ':'✅ تم الحفظ! الإجمالي: ')+total.toLocaleString()+(currentLang==='en'?' EGP':' ج'));
+  showToast((currentLang==='en'?'✅ Saved! Total: ':'✅ تم الحفظ! الإجمالي: ')+total.toLocaleString()+(' '+getCurrency()));
   tab('shifts');
 }
 
@@ -1374,11 +1670,11 @@ function renderShifts(){
   const getShiftTypeLbl = s => { if(s.payType==='custom'){ if(s.customUnit) return s.customUnit; const p=places.find(x=>x.id==s.placeId); return p&&p.customName?p.customName:(isEn?'other':'آخر'); } return PT[s.payType]||''; };
   el.innerHTML=list.map(s=>{
     const tags=[];
-    if(s.count)tags.push(`<span class="tag tc" dir="ltr">⏱️ ${s.count} ${getShiftTypeLbl(s)} × ${s.payPrice}${isEn?' EGP':'ج'}</span>`);
-    if(s.exHC) tags.push(`<span class="tag tv">⚡ ${s.exHC} ${s.exHourName||(isEn?'Extra Hours':'ساعات إضافية')}</span>`);
-    if(s.exCC) tags.push(`<span class="tag tg">🏥 ${s.exCC} ${s.exCaseName||(isEn?'Regular Cases':'حالات عادية')}</span>`);
-    if(s.exTC) tags.push(`<span class="tag to">🔬 ${s.exTC} ${s.exTechName||(isEn?'Technique':'تكنيك')}</span>`);
-    if(s.exOC) tags.push(`<span class="tag ty">🔷 ${s.exOC} ${s.exOtherName||(isEn?'Other Cases':'حالات أخرى')}</span>`);
+    if(s.count)tags.push(`<span class="tag tc" dir="ltr">⏱️ ${s.count} ${getShiftTypeLbl(s)} × ${s.payPrice} ${getCurrency()}</span>`);
+    if(s.exHC) tags.push(`<span class="tag tv">⚡ ${s.exHC} ${s.exHourName||(isEn?'Extra Hours':'ساعات إضافية')}${s.exHP ? ` × ${(s.exHP).toLocaleString()} ${getCurrency()}` : ''}</span>`);
+    if(s.exCC) tags.push(`<span class="tag tg">🏥 ${s.exCC} ${s.exCaseName||(isEn?'Regular Cases':'حالات عادية')}${s.exCP ? ` × ${(s.exCP).toLocaleString()} ${getCurrency()}` : ''}</span>`);
+    if(s.exTC) tags.push(`<span class="tag to">🔬 ${s.exTC} ${s.exTechName||(isEn?'Technique':'تكنيك')}${s.exTP ? ` × ${(s.exTP).toLocaleString()} ${getCurrency()}` : ''}</span>`);
+    if(s.exOC) tags.push(`<span class="tag ty">🔷 ${s.exOC} ${s.exOtherName||(isEn?'Other Cases':'حالات أخرى')}${s.exOP ? ` × ${(s.exOP).toLocaleString()} ${getCurrency()}` : ''}</span>`);
     if(s.customExtras) s.customExtras.forEach(r=>{ if(r.count) tags.push(`<span class="tag ty">➕ ${r.count} ${r.name}</span>`); });
     if(s.note) tags.push(`<span class="tag ty">💬 ${s.note}</span>`);
     return `<div class="shift-item">
@@ -1394,7 +1690,7 @@ function renderShifts(){
       </div>
       <div class="si-row2">
         <div class="si-tags">${tags.join('')}</div>
-        <div class="si-amount">${s.total.toLocaleString()} ${isEn?'EGP':'ج'}</div>
+        <div class="si-amount">${s.total.toLocaleString()} ${getCurrency()}</div>
       </div>
     </div>`;
   }).join('');
@@ -1457,7 +1753,7 @@ function saveEditShift(){
   save();
   document.getElementById('edit-shift-modal').classList.remove('show');
   renderShifts();
-  showToast((currentLang==='en'?'✅ Updated! Total: ':'✅ تم التعديل! الإجمالي: ')+total.toLocaleString()+(currentLang==='en'?' EGP':' ج'));
+  showToast((currentLang==='en'?'✅ Updated! Total: ':'✅ تم التعديل! الإجمالي: ')+total.toLocaleString()+(' '+getCurrency()));
 }
 
 // ── SUMMARY ──
@@ -1506,7 +1802,7 @@ function renderSummary(){
   const discAmt=uniquePids.reduce((a,pid)=>a+(placeDiscount[pid]||0),0);
   const totalDeduct=taxAmt+discAmt;
   const net=gross-totalDeduct;
-  const cu = currentLang==='en' ? ' EGP' : ' ج';
+  const cu = ' ' + getCurrency();
   document.getElementById('sal-base').textContent=basePay.toLocaleString()+cu;
   document.getElementById('sal-extra').textContent=extraPay.toLocaleString()+cu;
   document.getElementById('sal-gross').textContent=gross.toLocaleString()+cu;
@@ -1563,7 +1859,7 @@ function renderByPlace(){
   });
 
   const isEn = currentLang === 'en';
-  const cu = isEn ? ' EGP' : ' ج';
+  const cu = ' ' + getCurrency();
   const bpl=document.getElementById('byplace-list');
   if(!Object.keys(byPlace).length){
     bpl.innerHTML=`<div class="empty" style="padding:30px;"><p>${isEn?'No data for this period':'لا بيانات في هذه الفترة'}</p></div>`;
@@ -1599,7 +1895,7 @@ function renderByPlace(){
         </div>
         ${d.notes&&d.notes.length?`<div style="display:flex;flex-direction:column;gap:4px;margin-bottom:6px;">${d.notes.map(n=>`<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25);border-radius:8px;padding:4px 10px;font-size:.72rem;color:#a78bfa;font-family:Cairo,sans-serif;">💬 <span style="color:var(--muted);font-size:.68rem;">${fmtDate(n.date)}</span> ${n.note}</span>`).join('')}</div>`:''}
         <div class="tax-inline"><label>🧾 ${isEn?'Tax':'ضريبة'}</label><input type="number" id="ptax-${pid}" value="${st}" min="0" max="100" onchange="updatePlaceTax('${pid}')"><span>%</span></div>
-        <div class="tax-inline" style="margin-top:6px;"><label>✂️ ${isEn?'Discount':'الخصومات'}</label><input type="number" id="pdisc-${pid}" value="${disc}" min="0" placeholder="0" onchange="updatePlaceDiscount('${pid}')"><span>${isEn?'EGP':'ج'}</span></div>
+        <div class="tax-inline" style="margin-top:6px;"><label>✂️ ${isEn?'Discount':'الخصومات'}</label><input type="number" id="pdisc-${pid}" value="${disc}" min="0" placeholder="0" onchange="updatePlaceDiscount('${pid}')"><span>${getCurrency()}</span></div>
         <div class="pplace-result">
           <div>
             <div style="font-size:.68rem;color:var(--muted);">${isEn?'Total Discounts':'إجمالي الخصومات'}</div>
@@ -1662,18 +1958,18 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
     let rowsHTML = '';
     d.shifts.forEach((s, i)=>{
       const det = [];
-      if(s.count) det.push(`${s.count} ${getReportTypeLbl(s)} × ${(s.payPrice||0).toLocaleString()} ${isEn?'EGP':'ج'}`);
-      if(s.exHC) det.push(`⚡ ${s.exHC} ${s.exHourName||'إضافي'}${s.exHP ? ` × ${(s.exHP).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`);
-      if(s.exCC) det.push(`${s.exCC} ${s.exCaseName||'عادية'}${s.exCP ? ` × ${(s.exCP).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`);
-      if(s.exTC) det.push(`${s.exTC} ${s.exTechName||'تكنيك'}${s.exTP ? ` × ${(s.exTP).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`);
-      if(s.exOC) det.push(`${s.exOC} ${s.exOtherName||'أخرى'}${s.exOP ? ` × ${(s.exOP).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`);
-      if(s.customExtras) s.customExtras.forEach(r=>{ if(r.count&&r.name) det.push(`${r.count} ${r.name}${r.price ? ` × ${(r.price).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`); });
+      if(s.count) det.push(`${s.count} ${getReportTypeLbl(s)} × ${(s.payPrice||0).toLocaleString()} ${getCurrency()}`);
+      if(s.exHC) det.push(`⚡ ${s.exHC} ${s.exHourName||'إضافي'}${s.exHP ? ` × ${(s.exHP).toLocaleString()} ${getCurrency()}` : ''}`);
+      if(s.exCC) det.push(`${s.exCC} ${s.exCaseName||'عادية'}${s.exCP ? ` × ${(s.exCP).toLocaleString()} ${getCurrency()}` : ''}`);
+      if(s.exTC) det.push(`${s.exTC} ${s.exTechName||'تكنيك'}${s.exTP ? ` × ${(s.exTP).toLocaleString()} ${getCurrency()}` : ''}`);
+      if(s.exOC) det.push(`${s.exOC} ${s.exOtherName||'أخرى'}${s.exOP ? ` × ${(s.exOP).toLocaleString()} ${getCurrency()}` : ''}`);
+      if(s.customExtras) s.customExtras.forEach(r=>{ if(r.count&&r.name) det.push(`${r.count} ${r.name}${r.price ? ` × ${(r.price).toLocaleString()} ${getCurrency()}` : ''}`); });
       const rowBg = i%2===0 ? '#ffffff' : '#fafbff';
       const noteHTML = s.note ? `<div style="margin-top:5px;font-size:11px;color:#7c3aed;font-family:${F};background:#f3f0ff;border-radius:6px;padding:3px 8px;display:inline-block;">💬 ${s.note}</div>` : '';
       rowsHTML += `<tr style="background:${rowBg};">
           <td style="padding:14px 18px;border-bottom:1px solid #f0f2f8;color:#333;font-size:13px;font-family:${F};font-weight:600;white-space:nowrap;">${fmtDate(s.date)}</td>
           <td style="padding:14px 18px;border-bottom:1px solid #f0f2f8;color:#666;font-size:12px;font-family:${F};">${det.join(' · ')}${noteHTML}</td>
-          <td style="padding:14px 18px;border-bottom:1px solid #f0f2f8;color:#1a7a3e;font-size:15px;font-weight:900;font-family:${F};text-align:${isEn?'right':'left'};white-space:nowrap;">${(s.total||0).toLocaleString()} ${isEn?'EGP':'ج'}</td>
+          <td style="padding:14px 18px;border-bottom:1px solid #f0f2f8;color:#1a7a3e;font-size:15px;font-weight:900;font-family:${F};text-align:${isEn?'right':'left'};white-space:nowrap;">${(s.total||0).toLocaleString()} ${getCurrency()}</td>
         </tr>`;
     });
 
@@ -1681,20 +1977,20 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
     <div style="margin-bottom:18px;border-radius:16px;overflow:hidden;box-shadow:0 3px 14px rgba(0,0,0,0.12);">
       <div style="background:${color};padding:15px 20px;display:flex;justify-content:space-between;align-items:center;">
         <div style="color:#fff;font-size:16px;font-weight:900;font-family:${F};">🏥 ${d.name}</div>
-        <div style="color:#fff;font-size:17px;font-weight:900;font-family:${F};white-space:nowrap;">${d.total.toLocaleString()} ${isEn?'EGP':'ج'}</div>
+        <div style="color:#fff;font-size:17px;font-weight:900;font-family:${F};white-space:nowrap;">${d.total.toLocaleString()} ${getCurrency()}</div>
       </div>
       <table style="width:100%;border-collapse:collapse;background:#fff;">
         <tbody>
           ${rowsHTML}
           ${totalDeduct2>0?`<tr style="background:#fff5f5;">
-            <td colspan="2" style="padding:10px 18px;font-size:12px;font-family:${F};color:#e53935;">${isEn?'Deductions:':'الخصومات:'} ${st2>0?`🧾 ${isEn?'Tax':'ضريبة'} ${st2}%: -${ta.toLocaleString()} ${isEn?'EGP':'ج'}`:''} ${disc2>0?` &nbsp;✂️ ${isEn?'Discount':'خصم'}: -${disc2.toLocaleString()} ${isEn?'EGP':'ج'}`:''}</td>
-            <td style="padding:10px 18px;font-size:13px;font-weight:900;font-family:${F};color:#e53935;text-align:${isEn?'right':'left'};white-space:nowrap;">-${totalDeduct2.toLocaleString()} ${isEn?'EGP':'ج'}</td>
+            <td colspan="2" style="padding:10px 18px;font-size:12px;font-family:${F};color:#e53935;">${isEn?'Deductions:':'الخصومات:'} ${st2>0?`🧾 ${isEn?'Tax':'ضريبة'} ${st2}%: -${ta.toLocaleString()} ${getCurrency()}`:''} ${disc2>0?` &nbsp;✂️ ${isEn?'Discount':'خصم'}: -${disc2.toLocaleString()} ${getCurrency()}`:''}</td>
+            <td style="padding:10px 18px;font-size:13px;font-weight:900;font-family:${F};color:#e53935;text-align:${isEn?'right':'left'};white-space:nowrap;">-${totalDeduct2.toLocaleString()} ${getCurrency()}</td>
           </tr>`:''}
           <tr style="background:#f0f4ff;">
             <td colspan="2" style="padding:14px 18px;font-size:14px;font-weight:900;font-family:${F};color:#333;">
               💰 <span style="color:${color};">${isEn?'Net:':'الصافي:'}</span>
             </td>
-            <td style="padding:14px 18px;font-size:16px;font-weight:900;font-family:${F};color:${color};text-align:${isEn?'right':'left'};white-space:nowrap;">${pn.toLocaleString()} ${isEn?'EGP':'ج'}</td>
+            <td style="padding:14px 18px;font-size:16px;font-weight:900;font-family:${F};color:${color};text-align:${isEn?'right':'left'};white-space:nowrap;">${pn.toLocaleString()} ${getCurrency()}</td>
           </tr>
         </tbody>
       </table>
@@ -1722,7 +2018,7 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
           <div style="font-size:12px;color:#999;font-weight:600;font-family:${F};margin-top:5px;">${isEn?'Shifts':'شيفتات'}</div>
         </td>
         <td style="width:33%;background:#ffffff;border-radius:14px;padding:18px 8px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.08);border-top:4px solid #1a73e8;vertical-align:middle;">
-          <div style="font-size:24px;font-weight:900;color:#1a73e8;font-family:${F};line-height:1.2;white-space:nowrap;">${grossTotal.toLocaleString()} <span style="font-size:16px;">${isEn?'EGP':'ج'}</span></div>
+          <div style="font-size:24px;font-weight:900;color:#1a73e8;font-family:${F};line-height:1.2;white-space:nowrap;">${grossTotal.toLocaleString()} <span style="font-size:16px;">${getCurrency()}</span></div>
           <div style="font-size:12px;color:#999;font-weight:600;font-family:${F};margin-top:5px;">${isEn?'Gross Total':'الإجمالي'}</div>
         </td>
       </tr>
@@ -1730,7 +2026,7 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
 
     <!-- NET SALARY -->
     ${(()=>{
-      const cur = isEn ? 'EGP' : 'ج';
+      const cur = getCurrency();
       // جمع الضريبة الفعلية من كل مكان (per-place tax) + الضريبة العامة
       const perPlaceTaxTotal = Object.keys(byPlace).reduce((a,pid)=>{
         const pTax = (placeTax && placeTax[pid]) ? placeTax[pid] : 0;
@@ -1754,7 +2050,7 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
       rows += '<div style="'+rowStyle+'"><span style="'+lStyle+'">✂️ '+(isEn?'Discounts':'الخصومات')+'</span><span style="'+(tDisc>0?rStyleR:rStyleW)+'">'+( tDisc>0 ? '-'+tDisc.toLocaleString() : '0' )+' '+cur+'</span></div>';
       // 4- إجمالي الخصومات (دائماً يظهر)
       rows += '<div style="'+lastRowStyle+'"><span style="'+lStyle+'">📋 '+(isEn?'Total Deductions':'إجمالي الخصومات')+'</span><span style="'+(totalDeduct>0?rStyleR:rStyleW)+'">'+( totalDeduct>0 ? '-'+totalDeduct.toLocaleString() : '0' )+' '+cur+'</span></div>';
-      return '<div style="background:linear-gradient(135deg,#1a1a2e 0%,#2d1b69 50%,#7c3aed 100%);border-radius:18px;padding:26px 20px;text-align:center;margin-bottom:18px;"><div style="font-size:14px;color:rgba(255,255,255,0.75);font-family:'+F+';margin-bottom:12px;">💰 '+(isEn?'Net Salary:':'صافي المرتب:')+'</div><div style="font-size:50px;font-weight:900;color:#00e676;font-family:'+F+';line-height:1.1;letter-spacing:1px;">'+netTotal.toLocaleString()+' '+(isEn?'EGP':'جنيه')+'</div><div style="margin-top:20px;background:rgba(255,255,255,0.08);border-radius:12px;padding:14px 18px;">'+rows+'</div></div>';
+      return '<div style="background:linear-gradient(135deg,#1a1a2e 0%,#2d1b69 50%,#7c3aed 100%);border-radius:18px;padding:26px 20px;text-align:center;margin-bottom:18px;"><div style="font-size:14px;color:rgba(255,255,255,0.75);font-family:'+F+';margin-bottom:12px;">💰 '+(isEn?'Net Salary:':'صافي المرتب:')+'</div><div style="font-size:50px;font-weight:900;color:#00e676;font-family:'+F+';line-height:1.1;letter-spacing:1px;">'+netTotal.toLocaleString()+' '+getCurrency()+'</div><div style="margin-top:20px;background:rgba(255,255,255,0.08);border-radius:12px;padding:14px 18px;">'+rows+'</div></div>';
     })()}
 
     <!-- PLACES -->
@@ -2456,6 +2752,7 @@ async function checkLock(){
 }
 
 document.addEventListener('DOMContentLoaded', async ()=>{
+  checkOnboarding();
   await checkLock();
   await _loadData();
   // لو في ?reset في الـ URL — امسح كل حاجة وابدأ من الأول
@@ -2488,6 +2785,9 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   document.getElementById('s-month').value=ym;
   document.getElementById('f-month').value=ym;
   renderPlaces();populateSels();
+  loadCurrency();
+  setTimeout(checkBackupReminder, 1500);
+  setTimeout(checkRatingReminder, 2500);
 
   // Header tap for admin — على كلمة "سجل" بس
   // tap counter — click بس (touchend بيعمل double count)
@@ -2546,6 +2846,311 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     });
   }
 });
+
+// ── Backup Reminder ──
+function checkBackupReminder(){
+  const isEn = currentLang === 'en';
+  const last = parseInt(localStorage.getItem('sj_last_backup') || '0');
+  const now  = Date.now();
+  const days7 = 5 * 24 * 60 * 60 * 1000;
+  const dismissed = parseInt(localStorage.getItem('sj_backup_dismissed') || '0');
+  // لو اتعمل dismiss من أقل من يوم — متظهرش
+  if(now - dismissed < 24 * 60 * 60 * 1000) return;
+  // لو مفيش نسخة خالص أو من أكتر من 7 أيام
+  if(last === 0 || now - last > days7){
+    const banner = document.getElementById('backup-reminder-banner');
+    if(!banner) return;
+    const daysAgo = last === 0 ? null : Math.floor((now - last) / (24*60*60*1000));
+    const msg = document.getElementById('backup-reminder-msg');
+    const title = document.getElementById('backup-reminder-title');
+    const btn = document.getElementById('backup-reminder-btn');
+    const dis = document.getElementById('backup-dismiss-btn');
+    if(last === 0){
+      if(title) title.textContent = isEn ? 'No backup yet!' : 'لا توجد نسخة احتياطية بعد!';
+      if(msg)   msg.textContent   = isEn ? 'Protect your data — save a backup now.' : 'احمِ بياناتك — احفظ نسخة احتياطية الآن.';
+    } else {
+      if(title) title.textContent = isEn ? 'Backup Reminder' : 'تذكير: نسخ احتياطي';
+      if(msg)   msg.textContent   = isEn ? `Last backup ${daysAgo} days ago — save now to avoid data loss` : `آخر نسخة منذ ${daysAgo} أيام — احفظ نسخة جديدة لحماية بياناتك`;
+    }
+    if(btn) btn.textContent = isEn ? '📤 Save Now' : '📤 احفظ دلوقتي';
+    if(dis) dis.textContent = isEn ? 'Later' : 'لاحقاً';
+    banner.classList.add('show');
+    banner.style.display = 'flex';
+  }
+}
+function dismissBackupReminder(){
+  localStorage.setItem('sj_backup_dismissed', Date.now().toString());
+  const banner = document.getElementById('backup-reminder-banner');
+  if(banner){ banner.classList.remove('show'); banner.style.display='none'; }
+}
+
+
+// ══ ONBOARDING ══
+let obCurrent = 0;
+const OB_TOTAL = 4;
+
+function showOnboarding(){
+  const el = document.getElementById('onboarding-screen');
+  if(el){ el.style.display = 'flex'; obGoTo(0); applyObLang(); }
+}
+function obGoTo(idx){
+  obCurrent = idx;
+  const slides = document.getElementById('ob-slides');
+  if(slides) slides.style.transform = `translateX(${idx * 100}%)`;
+  // dots
+  for(let i=0;i<OB_TOTAL;i++){
+    const d = document.getElementById('ob-dot-'+i);
+    if(d){ d.classList.toggle('on', i===idx); }
+  }
+  // hide skip + next on last slide
+  const nav = document.getElementById('ob-nav');
+  if(nav) nav.style.display = idx === OB_TOTAL-1 ? 'none' : 'flex';
+}
+function obNext(){
+  if(obCurrent < OB_TOTAL-1){ obGoTo(obCurrent+1); }
+  else { finishOnboarding(); }
+}
+function finishOnboarding(){
+  localStorage.setItem('sj_onboarded','1');
+  const el = document.getElementById('onboarding-screen');
+  if(el){ el.style.opacity='0'; el.style.transition='opacity .4s'; setTimeout(()=>{ el.style.display='none'; el.style.opacity=''; }, 400); }
+}
+function checkOnboarding(){
+  if(!localStorage.getItem('sj_onboarded')){
+    showOnboarding();
+  }
+}
+
+
+// ══ STATISTICS ══
+function renderStats(){
+  if(!shifts.length){
+    document.getElementById('stat-total-income').textContent = '0 ج';
+    document.getElementById('stat-total-shifts').textContent = '0';
+    document.getElementById('stat-avg-monthly').textContent = '0 ج';
+    document.getElementById('stat-avg-shifts').textContent = '0';
+    document.getElementById('stat-best-month-name').textContent = '—';
+    document.getElementById('stat-best-month-val').textContent = '0 ج';
+    document.getElementById('stat-best-place-list').innerHTML = '<div style="color:var(--muted);font-size:.82rem;">لا يوجد بيانات بعد</div>';
+    document.getElementById('stat-monthly-chart').innerHTML = '';
+    document.getElementById('stat-monthly-labels').innerHTML = '';
+    return;
+  }
+
+  const isEn = currentLang === 'en';
+  const cu = ' ' + getCurrency();
+
+  // ── إجمالي الدخل والشيفتات ──
+  const totalIncome = shifts.reduce((a,s)=>a+s.total,0);
+  const totalShifts = shifts.length;
+  document.getElementById('stat-total-income').textContent = totalIncome.toLocaleString() + cu;
+  document.getElementById('stat-total-shifts').textContent = totalShifts;
+
+  // ── تجميع حسب الشهر ──
+  const byMonth = {};
+  shifts.forEach(s=>{
+    const m = s.date.substring(0,7);
+    if(!byMonth[m]) byMonth[m] = {total:0, count:0};
+    byMonth[m].total += s.total;
+    byMonth[m].count++;
+  });
+  const months = Object.keys(byMonth).sort();
+  const nMonths = months.length;
+
+  // ── متوسط الدخل الشهري ──
+  const avgMonthly = nMonths > 0 ? Math.round(totalIncome / nMonths) : 0;
+  const avgShifts  = nMonths > 0 ? Math.round(totalShifts / nMonths) : 0;
+  document.getElementById('stat-avg-monthly').textContent = avgMonthly.toLocaleString() + cu;
+  document.getElementById('stat-avg-shifts').textContent  = avgShifts;
+
+  // ── أعلى شهر ──
+  let bestMonth = months[0], bestVal = 0;
+  months.forEach(m=>{ if(byMonth[m].total > bestVal){ bestVal = byMonth[m].total; bestMonth = m; } });
+  const monthNames = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const monthNamesEn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtMonth(ym){
+    const [y,m] = ym.split('-');
+    return isEn ? (monthNamesEn[parseInt(m)-1]+' '+y) : (monthNames[parseInt(m)-1]+' '+y);
+  }
+  document.getElementById('stat-best-month-name').textContent = fmtMonth(bestMonth);
+  document.getElementById('stat-best-month-val').textContent  = bestVal.toLocaleString() + cu;
+
+  // ── أكثر مكان دخلاً ──
+  const byPlace = {};
+  shifts.forEach(s=>{
+    const k = s.placeId+'';
+    if(!byPlace[k]) byPlace[k] = {name:s.placeName, total:0, count:0};
+    byPlace[k].total += s.total;
+    byPlace[k].count++;
+  });
+  const sortedPlaces = Object.values(byPlace).sort((a,b)=>b.total-a.total);
+  const maxPlaceVal = sortedPlaces[0]?.total || 1;
+  const placeColors2 = ['#00e676','#00e5ff','#a78bfa','#ff9800','#ff5252'];
+  document.getElementById('stat-best-place-list').innerHTML = sortedPlaces.map((p,i)=>{
+    const pct = Math.round(p.total / maxPlaceVal * 100);
+    const col = placeColors2[i % placeColors2.length];
+    return `<div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:.8rem;font-weight:700;color:var(--text);">🏥 ${p.name}</span>
+        <span style="font-size:.82rem;font-weight:900;color:${col};">${p.total.toLocaleString()}${cu}</span>
+      </div>
+      <div style="height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${col};border-radius:3px;transition:width .6s ease;"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ── مخطط الدخل الشهري (آخر 6 شهور) ──
+  const last6 = months.slice(-6);
+  const maxVal = Math.max(...last6.map(m=>byMonth[m].total), 1);
+  const chartColors = ['#00e5ff','#a78bfa','#00e676','#ff9800','#ff5252','#ffd600'];
+  document.getElementById('stat-monthly-chart').innerHTML = last6.map((m,i)=>{
+    const pct = Math.round(byMonth[m].total / maxVal * 100);
+    const col = chartColors[i % chartColors.length];
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div style="font-size:.6rem;color:var(--muted);font-weight:700;">${byMonth[m].total.toLocaleString()}</div>
+      <div style="width:100%;background:rgba(255,255,255,0.06);border-radius:4px 4px 0 0;height:60px;display:flex;align-items:flex-end;">
+        <div style="width:100%;height:${Math.max(pct,4)}%;background:linear-gradient(180deg,${col},${col}88);border-radius:4px 4px 0 0;transition:height .6s ease;"></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('stat-monthly-labels').innerHTML = last6.map((m,i)=>{
+    const col = chartColors[i % chartColors.length];
+    const parts = m.split('-');
+    const lbl = isEn ? monthNamesEn[parseInt(parts[1])-1] : monthNames[parseInt(parts[1])-1].substring(0,3);
+    return `<div style="flex:1;text-align:center;font-size:.6rem;color:${col};font-weight:700;">${lbl}</div>`;
+  }).join('');
+}
+
+
+
+// ══ CURRENCY ══
+function getCurrency(){
+  const saved = localStorage.getItem('sj_currency') || 'ج|جنيه مصري';
+  return saved.split('|')[0];
+}
+function getCurrencyFull(){
+  return localStorage.getItem('sj_currency') || 'ج|جنيه مصري';
+}
+function saveCurrency(){
+  const val = document.getElementById('currency-select')?.value || 'ج|جنيه مصري';
+  localStorage.setItem('sj_currency', val);
+  // تحديث اسم العملة في الملخص
+  const parts = val.split('|');
+  const fullName = parts[1] || 'جنيه مصري';
+  const sym = parts[0];
+  const lbl = document.getElementById('lbl-currency');
+  if(lbl) lbl.textContent = fullName;
+  renderSummary();
+  renderByPlace();
+  showToast('✅ تم تغيير العملة إلى ' + fullName);
+}
+function loadCurrency(){
+  const saved = localStorage.getItem('sj_currency') || 'ج|جنيه مصري';
+  const sel = document.getElementById('currency-select');
+  if(sel) sel.value = saved;
+  const parts = saved.split('|');
+  const lbl = document.getElementById('lbl-currency');
+  if(lbl) lbl.textContent = parts[1] || 'جنيه مصري';
+}
+
+
+// ── Onboarding Language Toggle ──
+const OB_TEXT = {
+  ar: {
+    langBtn:   'English',
+    s1sub:     'شيفتاتي',
+    s1desc:    'تطبيقك الشخصي لتتبع شيفتاتك<br>وحساب مرتبك بدقة في ثوانٍ',
+    s1for:     'مخصص لـ',
+    s1aud:     '👨‍⚕️ الأطباء وجميع العاملين بالمجال الطبي',
+    s2title:   'أضف أماكن عملك',
+    s2desc:    'سجّل كل مكان بتشتغل فيه<br>بأسمه وسعره الخاص',
+    s3title:   'سجّل شيفتاتك بسهولة',
+    s3desc:    'اختار المكان والتاريخ والعدد<br>والتطبيق يحسب كل حاجة تلقائياً',
+    s4title:   'ملخص ومرتب فوري',
+    s4desc:    'شوف مرتبك الصافي في أي وقت<br>وصدّر تقارير احترافية بضغطة',
+    skip:      'تخطي',
+    start:     'ابدأ دلوقتي ⚡',
+  },
+  en: {
+    langBtn:   'عربي',
+    s1sub:     'Shiftaty',
+    s1desc:    'Your personal app to track shifts<br>and calculate your salary in seconds',
+    s1for:     'Made for',
+    s1aud:     '👨‍⚕️ Doctors & all healthcare workers',
+    s2title:   'Add your workplaces',
+    s2desc:    'Add each place you work at<br>with its name and rate',
+    s3title:   'Log shifts easily',
+    s3desc:    'Pick the place, date and count<br>the app calculates everything automatically',
+    s4title:   'Instant salary summary',
+    s4desc:    'See your net salary anytime<br>and export professional reports in one tap',
+    skip:      'Skip',
+    start:     'Get Started ⚡',
+  }
+};
+
+function obToggleLang(){
+  currentLang = currentLang === 'ar' ? 'en' : 'ar';
+  localStorage.setItem('sj_lang', currentLang);
+  applyObLang();
+  // تطبيق على باقي التطبيق برضو
+  applyLang();
+}
+
+function applyObLang(){
+  const T = OB_TEXT[currentLang] || OB_TEXT['ar'];
+  const s = (id, val) => { const el = document.getElementById(id); if(el) el.innerHTML = val; };
+  s('ob-lang-label', T.langBtn);
+  s('ob-s1-sub',     T.s1sub);
+  s('ob-s1-desc',    T.s1desc);
+  s('ob-s1-for',     T.s1for);
+  s('ob-s1-audience',T.s1aud);
+  s('ob-s2-title',   T.s2title);
+  s('ob-s2-desc',    T.s2desc);
+  s('ob-s3-title',   T.s3title);
+  s('ob-s3-desc',    T.s3desc);
+  s('ob-s4-title',   T.s4title);
+  s('ob-s4-desc',    T.s4desc);
+  s('ob-skip-lbl',   T.skip);
+  s('ob-start-lbl',  T.start);
+  // اتجاه النص
+  const ob = document.getElementById('onboarding-screen');
+  if(ob) ob.dir = currentLang === 'en' ? 'ltr' : 'rtl';
+}
+
+
+// ══ RATING REMINDER ══
+function checkRatingReminder(){
+  const isEn = currentLang === 'en';
+  const installed = parseInt(localStorage.getItem('sj_install_date') || '0');
+  const now = Date.now();
+  // حفظ تاريخ أول استخدام
+  if(!installed){ localStorage.setItem('sj_install_date', now.toString()); return; }
+  const days7 = 7 * 24 * 60 * 60 * 1000;
+  const dismissed = parseInt(localStorage.getItem('sj_rating_dismissed') || '0');
+  const rated = localStorage.getItem('sj_rated') === '1';
+  if(rated) return;
+  if(now - dismissed < 3 * 24 * 60 * 60 * 1000) return; // مش يزعجه كل يوم
+  if(now - installed < days7) return; // انتظر أسبوع
+  const banner = document.getElementById('rating-reminder-banner');
+  if(!banner) return;
+  const title = document.getElementById('rating-banner-title');
+  const msg   = document.getElementById('rating-banner-msg');
+  const btn   = document.getElementById('rating-banner-btn');
+  const dis   = document.getElementById('rating-dismiss-btn');
+  if(title) title.textContent = isEn ? 'Enjoying the app?' : 'عجبك التطبيق؟';
+  if(msg)   msg.textContent   = isEn ? 'Share your feedback and help us improve 🙏' : 'شاركنا رأيك وساعدنا نتطور أكتر 🙏';
+  if(btn)   btn.textContent   = isEn ? '⭐ Rate Now' : '⭐ قيّم دلوقتي';
+  if(dis)   dis.textContent   = isEn ? 'Later' : 'لاحقاً';
+  banner.style.display = 'flex';
+}
+function dismissRatingReminder(){
+  localStorage.setItem('sj_rating_dismissed', Date.now().toString());
+  localStorage.setItem('sj_rated', '1');
+  const banner = document.getElementById('rating-reminder-banner');
+  if(banner){ banner.style.display = 'none'; }
+}
+
 </script>
 </body>
 </html>
