@@ -1663,11 +1663,11 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
     d.shifts.forEach((s, i)=>{
       const det = [];
       if(s.count) det.push(`${s.count} ${getReportTypeLbl(s)} × ${(s.payPrice||0).toLocaleString()} ${isEn?'EGP':'ج'}`);
-      if(s.exHC) det.push(`⚡ ${s.exHC} ${s.exHourName||'إضافي'}`);
-      if(s.exCC) det.push(`${s.exCC} ${s.exCaseName||'عادية'}`);
-      if(s.exTC) det.push(`${s.exTC} ${s.exTechName||'تكنيك'}`);
-      if(s.exOC) det.push(`${s.exOC} ${s.exOtherName||'أخرى'}`);
-      if(s.customExtras) s.customExtras.forEach(r=>{ if(r.count&&r.name) det.push(`${r.count} ${r.name}`); });
+      if(s.exHC) det.push(`⚡ ${s.exHC} ${s.exHourName||'إضافي'}${s.exHP ? ` × ${(s.exHP).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`);
+      if(s.exCC) det.push(`${s.exCC} ${s.exCaseName||'عادية'}${s.exCP ? ` × ${(s.exCP).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`);
+      if(s.exTC) det.push(`${s.exTC} ${s.exTechName||'تكنيك'}${s.exTP ? ` × ${(s.exTP).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`);
+      if(s.exOC) det.push(`${s.exOC} ${s.exOtherName||'أخرى'}${s.exOP ? ` × ${(s.exOP).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`);
+      if(s.customExtras) s.customExtras.forEach(r=>{ if(r.count&&r.name) det.push(`${r.count} ${r.name}${r.price ? ` × ${(r.price).toLocaleString()} ${isEn?'EGP':'ج'}` : ''}`); });
       const rowBg = i%2===0 ? '#ffffff' : '#fafbff';
       const noteHTML = s.note ? `<div style="margin-top:5px;font-size:11px;color:#7c3aed;font-family:${F};background:#f3f0ff;border-radius:6px;padding:3px 8px;display:inline-block;">💬 ${s.note}</div>` : '';
       rowsHTML += `<tr style="background:${rowBg};">
