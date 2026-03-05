@@ -2535,9 +2535,12 @@ async function _sha256(msg){
 }
 
 // ── 2) Encryption Key (derived from app fingerprint) ──
+let _cachedKey = null;
 async function _getKey(){
+  if(_cachedKey) return _cachedKey;
   const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(_SALT + navigator.userAgent.slice(0,20)), {name:'PBKDF2'}, false, ['deriveKey']);
-  return crypto.subtle.deriveKey({name:'PBKDF2', salt:new TextEncoder().encode(_SALT), iterations:1000, hash:'SHA-256'}, raw, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+  _cachedKey = await crypto.subtle.deriveKey({name:'PBKDF2', salt:new TextEncoder().encode(_SALT), iterations:1000, hash:'SHA-256'}, raw, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
+  return _cachedKey;
 }
 
 // ── 3) Encrypt ──
@@ -2753,8 +2756,8 @@ async function checkLock(){
 
 document.addEventListener('DOMContentLoaded', async ()=>{
   checkOnboarding();
-  await checkLock();
-  await _loadData();
+  // شغّل checkLock و _loadData بالتوازي عشان نوفر وقت الفتح
+  const [_lockResult] = await Promise.all([checkLock(), _loadData()]);
   // لو في ?reset في الـ URL — امسح كل حاجة وابدأ من الأول
   if(window.location.search.includes('reset')){
     localStorage.clear();
