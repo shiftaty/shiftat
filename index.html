@@ -2191,9 +2191,9 @@ function _buildReportContent(isEn, dir2, byPlace, placeTax, list, grossTotal, ta
       const totalDeduct = realTaxAmt + tDisc;
       const rowStyle = 'display:table;width:100%;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.12);';
       const lastRowStyle = 'display:table;width:100%;padding:8px 0;';
-      const lStyle = 'display:table-cell;font-size:13px;color:rgba(255,255,255,0.7);font-family:'+F+';text-align:right;vertical-align:middle;';
-      const rStyleW = 'display:table-cell;font-size:14px;font-weight:800;color:#fff;font-family:'+F+';text-align:left;white-space:nowrap;vertical-align:middle;';
-      const rStyleR = 'display:table-cell;font-size:14px;font-weight:800;color:#ff5252;font-family:'+F+';text-align:left;white-space:nowrap;vertical-align:middle;';
+      const lStyle = 'display:table-cell;font-size:13px;color:rgba(255,255,255,0.7);font-family:'+F+';text-align:'+(isEn?'left':'right')+';vertical-align:middle;';
+      const rStyleW = 'display:table-cell;font-size:14px;font-weight:800;color:#fff;font-family:'+F+';text-align:'+(isEn?'right':'left')+';white-space:nowrap;vertical-align:middle;';
+      const rStyleR = 'display:table-cell;font-size:14px;font-weight:800;color:#ff5252;font-family:'+F+';text-align:'+(isEn?'right':'left')+';white-space:nowrap;vertical-align:middle;';
       let rows = '';
       // 1- إجمالي المرتب (دائماً يظهر)
       rows += '<div style="'+rowStyle+'"><span style="'+lStyle+'">📊 '+(isEn?'Gross Total':'إجمالي المرتب')+'</span><span style="'+rStyleW+'">'+grossTotal.toLocaleString()+' '+cur+'</span></div>';
