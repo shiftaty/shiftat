@@ -2547,11 +2547,20 @@ async function _sha256(msg){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-// ── 2) Encryption Key (derived from app fingerprint) ──
+// ── 2) Encryption Key (derived from stable app fingerprint) ──
 let _cachedKey = null;
 async function _getKey(){
   if(_cachedKey) return _cachedKey;
-  const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(_SALT + navigator.userAgent.slice(0,20)), {name:'PBKDF2'}, false, ['deriveKey']);
+  // iOS Fix: لا نستخدم userAgent لأنه بيتغير على iOS بين sessions
+  // نستخدم key ثابت مبني على الـ SALT بس
+  let stableId = localStorage.getItem('sj_device_id');
+  if(!stableId){
+    // أول مرة: نولد ID عشوائي ونحفظه
+    const arr = crypto.getRandomValues(new Uint8Array(16));
+    stableId = Array.from(arr).map(b=>b.toString(16).padStart(2,'0')).join('');
+    localStorage.setItem('sj_device_id', stableId);
+  }
+  const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(_SALT + stableId), {name:'PBKDF2'}, false, ['deriveKey']);
   _cachedKey = await crypto.subtle.deriveKey({name:'PBKDF2', salt:new TextEncoder().encode(_SALT), iterations:1000, hash:'SHA-256'}, raw, {name:'AES-GCM', length:256}, false, ['encrypt','decrypt']);
   return _cachedKey;
 }
@@ -2632,34 +2641,51 @@ document.addEventListener('selectstart', e=>{
 
 // ── 8) Anti Screenshot hint (visual only on mobile) ──
 // iOS Fix: track if user just performed an in-app action (save/add)
-// to avoid false lock when iOS briefly hides the app during dialogs
 let _iosLastAction = 0;
-function _markIOSAction(){ _iosLastAction = Date.now(); }
+function _markIOSAction(){
+  _iosLastAction = Date.now();
+  // جدد الـ ios_token timestamp عشان الـ session ميخلصش
+  const t = localStorage.getItem('sj_ios_token');
+  if(t && t.length > 10){
+    localStorage.setItem('sj_ios_token_t', Date.now().toString());
+  }
+}
+
+// iOS Fix: helper to check if session is still valid
+function _hasValidSession(){
+  const phone = localStorage.getItem('sj_lock_phone_h');
+  if(!phone) return true; // مفيش قفل أصلاً
+  // ① sessionStorage
+  const runtimeSession = sessionStorage.getItem('sj_runtime_session');
+  if(runtimeSession && runtimeSession.length > 10) return true;
+  // ② تذكرني
+  const session = localStorage.getItem('sj_lock_session');
+  const st      = localStorage.getItem('sj_lock_st');
+  if(session && session === st && session.length > 10) return true;
+  // ③ ios_token (30 دقيقة)
+  const iosToken     = localStorage.getItem('sj_ios_token');
+  const iosTokenTime = parseInt(localStorage.getItem('sj_ios_token_t') || '0');
+  if(iosToken && iosToken.length > 10 && Date.now() - iosTokenTime < 30 * 60 * 1000) return true;
+  return false;
+}
 
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
     document.body.style.filter='blur(20px)';
   } else {
     setTimeout(()=>{ document.body.style.filter=''; }, 50);
-    const phone   = localStorage.getItem('sj_lock_phone_h');
-    if(!phone) return;
+    // iOS Fix: grace period 5 ثواني بعد أي action
+    if(Date.now() - _iosLastAction < 5000) return;
+    if(_hasValidSession()) return;
+    showLockScreen();
+  }
+});
 
-    // iOS Fix: if the app returned to visible within 3 seconds of a user action,
-    // it was likely just a system dialog (keyboard, permission, etc.) — don't lock
-    if(Date.now() - _iosLastAction < 3000) return;
-
-    // ① تحقق من sessionStorage أولاً (الأهم على iOS)
-    const runtimeSession = sessionStorage.getItem('sj_runtime_session');
-    if(runtimeSession && runtimeSession.length > 10) return;
-    // ② تحقق من تذكرني في localStorage
-    const session = localStorage.getItem('sj_lock_session');
-    const st      = localStorage.getItem('sj_lock_st');
-    if(session && session === st && session.length > 10) return;
-    // ③ iOS Fix: check short-lived localStorage token (set on login, lasts 5min)
-    const iosToken = localStorage.getItem('sj_ios_token');
-    const iosTokenTime = parseInt(localStorage.getItem('sj_ios_token_t') || '0');
-    if(iosToken && iosToken.length > 10 && Date.now() - iosTokenTime < 5 * 60 * 1000) return;
-    // مفيش session صالح — اعرض اللوك
+// iOS Fix: pageshow بيتفعل لما التطبيق يرجع من الـ background على iOS
+window.addEventListener('pageshow', (e)=>{
+  if(e.persisted){ // جه من bfcache
+    if(Date.now() - _iosLastAction < 5000) return;
+    if(_hasValidSession()) return;
     showLockScreen();
   }
 });
