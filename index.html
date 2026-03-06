@@ -148,10 +148,11 @@
   .bn-lbl{font-size:.78rem;color:var(--muted);margin-bottom:6px;}
   .bn-val{font-size:3.2rem;font-weight:900;background:linear-gradient(135deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
   .bn-curr{font-size:.78rem;color:var(--muted);margin-top:4px;}
-  .s-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:.85rem;}
+  .s-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);font-size:.85rem;width:100%;}
   .s-row:last-child{border:none;}
-  .s-row .lbl{color:var(--muted);}
-  .s-row .val{font-weight:800;}
+  .s-row .lbl{color:var(--muted);flex:1;min-width:0;}
+  .s-row .val{font-weight:800;white-space:nowrap;margin-left:12px;}
+  [dir="rtl"] .s-row .val{margin-left:0;margin-right:12px;}
   .s-row.stotal .lbl{color:var(--text);font-weight:800;}
   .s-row.stotal .val{color:var(--green);}
   .s-row.stax .val{color:var(--red);}
