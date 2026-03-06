@@ -762,38 +762,38 @@
     
     <!-- ── العملة ── -->
     <div style="background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:16px;padding:16px;margin-bottom:12px;">
-      <div style="font-size:.72rem;color:var(--cyan);font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;">🌍 العملة</div>
+      <div id="currency-section-title" style="font-size:.72rem;color:var(--cyan);font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;">🌍 العملة</div>
       <select id="currency-select" onchange="saveCurrency()" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;color:var(--text);font-family:Cairo,sans-serif;font-size:.9rem;outline:none;-webkit-appearance:none;">
-        <option value="ج|جنيه مصري">🇪🇬 جنيه مصري — ج</option>
-        <option value="ر.س|ريال سعودي">🇸🇦 ريال سعودي — ر.س</option>
-        <option value="د.إ|درهم إماراتي">🇦🇪 درهم إماراتي — د.إ</option>
-        <option value="د.ك|دينار كويتي">🇰🇼 دينار كويتي — د.ك</option>
-        <option value="د.ب|دينار بحريني">🇧🇭 دينار بحريني — د.ب</option>
-        <option value="ر.ق|ريال قطري">🇶🇦 ريال قطري — ر.ق</option>
-        <option value="ر.ع|ريال عُماني">🇴🇲 ريال عُماني — ر.ع</option>
-        <option value="د.أ|دينار أردني">🇯🇴 دينار أردني — د.أ</option>
-        <option value="ل.ل|ليرة لبنانية">🇱🇧 ليرة لبنانية — ل.ل</option>
-        <option value="ج.س|جنيه سوداني">🇸🇩 جنيه سوداني — ج.س</option>
-        <option value="$|دولار أمريكي">🇺🇸 دولار أمريكي — $</option>
-        <option value="€|يورو">🇪🇺 يورو — €</option>
-        <option value="£|جنيه إسترليني">🇬🇧 جنيه إسترليني — £</option>
+        <option value="ج|جنيه مصري" id="cur-egp">🇪🇬 جنيه مصري — ج</option>
+        <option value="ر.س|ريال سعودي" id="cur-sar">🇸🇦 ريال سعودي — ر.س</option>
+        <option value="د.إ|درهم إماراتي" id="cur-aed">🇦🇪 درهم إماراتي — د.إ</option>
+        <option value="د.ك|دينار كويتي" id="cur-kwd">🇰🇼 دينار كويتي — د.ك</option>
+        <option value="د.ب|دينار بحريني" id="cur-bhd">🇧🇭 دينار بحريني — د.ب</option>
+        <option value="ر.ق|ريال قطري" id="cur-qar">🇶🇦 ريال قطري — ر.ق</option>
+        <option value="ر.ع|ريال عُماني" id="cur-omr">🇴🇲 ريال عُماني — ر.ع</option>
+        <option value="د.أ|دينار أردني" id="cur-jod">🇯🇴 دينار أردني — د.أ</option>
+        <option value="ل.ل|ليرة لبنانية" id="cur-lbp">🇱🇧 ليرة لبنانية — ل.ل</option>
+        <option value="ج.س|جنيه سوداني" id="cur-sdg">🇸🇩 جنيه سوداني — ج.س</option>
+        <option value="$|دولار أمريكي" id="cur-usd">🇺🇸 دولار أمريكي — $</option>
+        <option value="€|يورو" id="cur-eur">🇪🇺 يورو — €</option>
+        <option value="£|جنيه إسترليني" id="cur-gbp">🇬🇧 جنيه إسترليني — £</option>
       </select>
     </div>
 
     <!-- ── نسخ احتياطي ── -->
     <div style="background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.12);border-radius:16px;padding:16px;margin-bottom:12px;">
-      <div style="font-size:.72rem;color:var(--cyan);font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;">💾 النسخ الاحتياطي</div>
-      <div style="font-size:.72rem;color:var(--muted);margin-bottom:12px;line-height:1.6;">احفظ بياناتك واستعدها في أي وقت — يُنصح برفع الملف على Google Drive أو iCloud لحمايته.</div>
+      <div id="backup-section-title" style="font-size:.72rem;color:var(--cyan);font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;">💾 النسخ الاحتياطي</div>
+      <div id="backup-section-desc" style="font-size:.72rem;color:var(--muted);margin-bottom:12px;line-height:1.6;">احفظ بياناتك واستعدها في أي وقت — يُنصح برفع الملف على Google Drive أو iCloud لحمايته.</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <button onclick="exportBackup()" style="background:linear-gradient(135deg,#00897b,#00e676);border:none;border-radius:12px;padding:12px 8px;color:#000;font-family:Cairo,sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📤 تصدير نسخة</button>
-        <button onclick="document.getElementById('import-file-input').click()" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.35);border-radius:12px;padding:12px 8px;color:#a78bfa;font-family:Cairo,sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">📥 استعادة نسخة</button>
+        <button onclick="exportBackup()" style="background:linear-gradient(135deg,#00897b,#00e676);border:none;border-radius:12px;padding:12px 8px;color:#000;font-family:Cairo,sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" id="export-backup-btn">📤 تصدير نسخة</button>
+        <button onclick="document.getElementById('import-file-input').click()" style="background:rgba(124,58,237,0.15);border:1px solid rgba(124,58,237,0.35);border-radius:12px;padding:12px 8px;color:#a78bfa;font-family:Cairo,sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" id="import-backup-btn">📥 استعادة نسخة</button>
       </div>
       <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importBackup(event)">
     </div>
 
     <div style="display:flex;gap:8px;justify-content:center;align-items:center;margin-bottom:6px;">
-      <button onclick="changeLockPhone()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:7px 18px;color:var(--muted);font-family:Cairo,sans-serif;font-size:.72rem;cursor:pointer;">🔐 تغيير رقم القفل</button>
-      <a href="https://wa.me/201030391975?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9%20%D9%81%D9%8A%20%D8%AA%D8%B7%D8%A8%D9%8A%D9%82%20%D8%B4%D9%8A%D9%81%D8%AA%D8%A7%D8%AA%D9%8A%20%F0%9F%99%8F" target="_blank" style="background:transparent;border:1px solid rgba(37,211,102,0.3);border-radius:20px;padding:7px 18px;color:#25d366;font-family:Cairo,sans-serif;font-size:.72rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">💬 تواصل معنا</a>
+      <button onclick="changeLockPhone()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:7px 18px;color:var(--muted);font-family:Cairo,sans-serif;font-size:.72rem;cursor:pointer;" id="change-lock-btn">🔐 <span id="change-lock-lbl">تغيير رقم القفل</span></button>
+      <a href="https://wa.me/201030391975?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%AD%D8%AA%D8%A7%D8%AC%20%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9%20%D9%81%D9%8A%20%D8%AA%D8%B7%D8%A8%D9%8A%D9%82%20%D8%B4%D9%8A%D9%81%D8%AA%D8%A7%D8%AA%D9%8A%20%F0%9F%99%8F" target="_blank" style="background:transparent;border:1px solid rgba(37,211,102,0.3);border-radius:20px;padding:7px 18px;color:#25d366;font-family:Cairo,sans-serif;font-size:.72rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;">💬 <span id="contact-us-lbl">تواصل معنا</span></a>
     </div>
     <div style="margin-bottom:16px;">
       <button onclick="clearAllData()" style="width:100%;background:rgba(255,23,68,0.07);border:1px dashed rgba(255,23,68,0.3);border-radius:14px;padding:14px;color:var(--red);font-family:Cairo,sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;" id="clear-all-btn">
@@ -1034,7 +1034,7 @@
   <button class="bnav-btn" type="button" onclick="event.preventDefault();event.stopPropagation();tab('log');return false;"><span class="ico">➕</span><span id="nav-shift-lbl">شيفت</span></button>
   <button class="bnav-btn" type="button" onclick="event.preventDefault();event.stopPropagation();tab('shifts');return false;"><span class="ico">📋</span><span id="nav-log-lbl">السجل</span></button>
   <button class="bnav-btn" type="button" onclick="event.preventDefault();event.stopPropagation();tab('summary');return false;"><span class="ico">💰</span><span id="nav-summary-lbl">الملخص</span></button>
-  <button class="bnav-btn" type="button" onclick="event.preventDefault();event.stopPropagation();tab('stats');return false;"><span class="ico">📊</span><span>إحصائيات</span></button>
+  <button class="bnav-btn" type="button" onclick="event.preventDefault();event.stopPropagation();tab('stats');return false;"><span class="ico">📊</span><span id="nav-stats-lbl">إحصائيات</span></button>
 </nav>
 
 <script>
@@ -2515,6 +2515,23 @@ function applyLang(){
   s('header-subtitle',         isEn ? E.subtitle        : A.subtitle);
 
   // ── NAV ──
+  s('nav-stats-lbl',    isEn ? 'Stats'    : 'إحصائيات');
+
+  // ── BACKUP REMINDER BANNER ──
+  s('rating-dismiss-btn', isEn ? 'Later' : 'لاحقاً');
+  s('backup-reminder-btn',   isEn ? '📤 Save Now' : '📤 احفظ دلوقتي');
+  s('backup-dismiss-btn',    isEn ? 'Later'       : 'لاحقاً');
+  // re-apply title/msg based on whether backup exists
+  const _backupLast = parseInt(localStorage.getItem('sj_last_backup') || '0');
+  const _backupTitle = document.getElementById('backup-reminder-title');
+  const _backupMsg   = document.getElementById('backup-reminder-msg');
+  if(_backupLast === 0){
+    if(_backupTitle) _backupTitle.textContent = isEn ? 'No backup yet!'                                          : 'لا توجد نسخة احتياطية بعد!';
+    if(_backupMsg)   _backupMsg.textContent   = isEn ? 'Protect your data — save a backup now.'                  : 'احمِ بياناتك — احفظ نسخة احتياطية الآن.';
+  } else {
+    if(_backupTitle) _backupTitle.textContent = isEn ? 'Backup Reminder'                                         : 'تذكير: نسخ احتياطي';
+    if(_backupMsg)   _backupMsg.textContent   = isEn ? 'Last backup over 7 days ago — save now to avoid data loss': 'آخر نسخة منذ أكثر من 7 أيام — احفظ نسخة جديدة لحماية بياناتك';
+  }
   s('nav-places-lbl',  isEn ? 'Places'   : 'الأماكن');
   s('nav-shift-lbl',   isEn ? 'Shift'    : 'شيفت');
   s('nav-log-lbl',     isEn ? 'Log'      : 'السجل');
@@ -2603,7 +2620,10 @@ function applyLang(){
   s('lbl-vt-byplace',    isEn ? 'Per Place'              : 'لكل مكان');
   s('lbl-tax-pct',       isEn ? '🧾 Tax Rate'            : '🧾 نسبة الضريبة');
   s('lbl-net-salary',    isEn ? 'Net Salary'             : 'صافي المرتب');
-  s('lbl-currency',      isEn ? 'Egyptian Pound'         : 'جنيه مصري');
+  // lbl-currency: get current currency name and translate
+  const _curSaved = localStorage.getItem('sj_currency') || 'ج|جنيه مصري';
+  const _curName = _curSaved.split('|')[1] || 'جنيه مصري';
+  s('lbl-currency', getCurrencyDisplayName(_curName));
   s('lbl-base-pay',      isEn ? '🏥 Base Pay'            : '🏥 أجر أساسي');
   s('lbl-extra-pay',     isEn ? '⚡ Extra'               : '⚡ إضافي');
   s('lbl-gross',         isEn ? '📊 Gross Total'         : '📊 الإجمالي');
@@ -2614,6 +2634,8 @@ function applyLang(){
   s('lbl-bp-alltime',    isEn ? 'All Time'               : 'كل الوقت');
   s('lbl-bp-gross',      isEn ? '📊 Grand Total'         : '📊 الإجمالي الكلي');
   s('lbl-bp-tax',        isEn ? '✂️ Total Discounts'       : '✂️ مجموع الخصومات');
+  s('lbl-discount-row',       isEn ? '✂️ Discounts'        : '✂️ الخصومات');
+  s('lbl-total-discount-row', isEn ? '📋 Total Deductions'  : '📋 إجمالي الخصومات');
   s('lbl-bp-net',        isEn ? '💰 Net Total'           : '💰 الصافي الكلي');
 
   // tax row label (has inner span so handle separately)
@@ -2648,6 +2670,34 @@ function applyLang(){
 
   s('wa-btn-lbl',    isEn ? '💬 Contact on WhatsApp'      : '💬 تواصل على واتساب للترقية');
   s('code-btn-lbl',  isEn ? '🔑 I have an activation code' : '🔑 عندي كود تفعيل');
+
+  // ── BACKUP SECTION ──
+  s('currency-section-title', isEn ? '🌍 Currency' : '🌍 العملة');
+
+  // ── CURRENCY OPTIONS ──
+  const curOpts = [
+    ['cur-egp', '🇪🇬 Egyptian Pound — EGP',     '🇪🇬 جنيه مصري — ج'],
+    ['cur-sar', '🇸🇦 Saudi Riyal — SAR',         '🇸🇦 ريال سعودي — ر.س'],
+    ['cur-aed', '🇦🇪 UAE Dirham — AED',          '🇦🇪 درهم إماراتي — د.إ'],
+    ['cur-kwd', '🇰🇼 Kuwaiti Dinar — KWD',       '🇰🇼 دينار كويتي — د.ك'],
+    ['cur-bhd', '🇧🇭 Bahraini Dinar — BHD',      '🇧🇭 دينار بحريني — د.ب'],
+    ['cur-qar', '🇶🇦 Qatari Riyal — QAR',        '🇶🇦 ريال قطري — ر.ق'],
+    ['cur-omr', '🇴🇲 Omani Riyal — OMR',         '🇴🇲 ريال عُماني — ر.ع'],
+    ['cur-jod', '🇯🇴 Jordanian Dinar — JOD',     '🇯🇴 دينار أردني — د.أ'],
+    ['cur-lbp', '🇱🇧 Lebanese Pound — LBP',      '🇱🇧 ليرة لبنانية — ل.ل'],
+    ['cur-sdg', '🇸🇩 Sudanese Pound — SDG',      '🇸🇩 جنيه سوداني — ج.س'],
+    ['cur-usd', '🇺🇸 US Dollar — $',             '🇺🇸 دولار أمريكي — $'],
+    ['cur-eur', '🇪🇺 Euro — €',                  '🇪🇺 يورو — €'],
+    ['cur-gbp', '🇬🇧 British Pound — £',         '🇬🇧 جنيه إسترليني — £'],
+  ];
+  curOpts.forEach(([id, en, ar]) => { const el = document.getElementById(id); if(el) el.textContent = isEn ? en : ar; });
+
+  s('backup-section-title', isEn ? '💾 Backup'                                                              : '💾 النسخ الاحتياطي');
+  s('backup-section-desc',  isEn ? 'Save & restore your data anytime — upload to Google Drive or iCloud.'  : 'احفظ بياناتك واستعدها في أي وقت — يُنصح برفع الملف على Google Drive أو iCloud لحمايته.');
+  s('export-backup-btn',    isEn ? '📤 Export Backup'   : '📤 تصدير نسخة');
+  s('import-backup-btn',    isEn ? '📥 Restore Backup'  : '📥 استعادة نسخة');
+  s('change-lock-lbl',      isEn ? 'Change PIN'         : 'تغيير رقم القفل');
+  s('contact-us-lbl',       isEn ? 'Contact Us'         : 'تواصل معنا');
 
   // ── PLACEHOLDERS ──
   const pName = document.getElementById('p-name');
@@ -3336,15 +3386,23 @@ function getCurrency(){
 function getCurrencyFull(){
   return localStorage.getItem('sj_currency') || 'ج|جنيه مصري';
 }
+const _CUR_NAME_MAP = {
+  'جنيه مصري':'Egyptian Pound','ريال سعودي':'Saudi Riyal','درهم إماراتي':'UAE Dirham',
+  'دينار كويتي':'Kuwaiti Dinar','دينار بحريني':'Bahraini Dinar','ريال قطري':'Qatari Riyal',
+  'ريال عُماني':'Omani Riyal','دينار أردني':'Jordanian Dinar','ليرة لبنانية':'Lebanese Pound',
+  'جنيه سوداني':'Sudanese Pound','دولار أمريكي':'US Dollar','يورو':'Euro','جنيه إسترليني':'British Pound'
+};
+function getCurrencyDisplayName(arName){
+  return (currentLang === 'en' && _CUR_NAME_MAP[arName]) ? _CUR_NAME_MAP[arName] : arName;
+}
 function saveCurrency(){
   const val = document.getElementById('currency-select')?.value || 'ج|جنيه مصري';
   localStorage.setItem('sj_currency', val);
   // تحديث اسم العملة في الملخص
   const parts = val.split('|');
   const fullName = parts[1] || 'جنيه مصري';
-  const sym = parts[0];
   const lbl = document.getElementById('lbl-currency');
-  if(lbl) lbl.textContent = fullName;
+  if(lbl) lbl.textContent = getCurrencyDisplayName(fullName);
   renderSummary();
   renderByPlace();
   showToast('✅ تم تغيير العملة إلى ' + fullName);
@@ -3355,7 +3413,7 @@ function loadCurrency(){
   if(sel) sel.value = saved;
   const parts = saved.split('|');
   const lbl = document.getElementById('lbl-currency');
-  if(lbl) lbl.textContent = parts[1] || 'جنيه مصري';
+  if(lbl) lbl.textContent = getCurrencyDisplayName(parts[1] || 'جنيه مصري');
 }
 
 
