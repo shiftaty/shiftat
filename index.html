@@ -119,10 +119,10 @@
   .si-place{font-weight:900;font-size:1rem;color:var(--text);}
   .si-date{font-size:.7rem;color:var(--muted);margin-top:2px;}
   .si-amount{font-size:1.1rem;font-weight:900;color:var(--green);white-space:nowrap;}
-  .si-row2{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:8px;}
-  .si-tags{display:flex;gap:5px;flex-wrap:wrap;flex:1;}
+  .si-row2{display:flex;justify-content:space-between;align-items:flex-start;margin-top:6px;gap:8px;}
+  .si-tags{display:flex;gap:5px;flex-wrap:wrap;flex:1;min-width:0;}
   .si-actions{display:flex;gap:5px;flex-shrink:0;}
-  .tag{padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;}
+  .tag{padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;}
   .tc{background:rgba(0,229,255,0.1);color:var(--cyan);border:1px solid rgba(0,229,255,0.2);}
   .tv{background:rgba(124,58,237,0.1);color:#a78bfa;border:1px solid rgba(124,58,237,0.2);}
   .tg{background:rgba(0,230,118,0.1);color:var(--green);border:1px solid rgba(0,230,118,0.2);}
@@ -1415,6 +1415,7 @@ function addPlace(){
   const price=parseFloat(document.getElementById('p-price').value)||0;
   if(!name){showToast(currentLang==='en'?'⚠️ Enter place name':'⚠️ أدخل اسم المكان');return;}
   places.push({id:Date.now(),name,type,customName,price});
+  _markIOSAction(); // iOS Fix: prevent false lock after add
   save();
   document.getElementById('p-name').value='';
   document.getElementById('p-price').value='';
@@ -1642,6 +1643,7 @@ function saveShift(){
   shifts.push({id:Date.now(),placeId:pid,placeName:p.name,date:dateVal,payType,payPrice,count,customUnit,
     exHC,exHP,exHourName,exCC,exCP,exCaseName,exTC,exTP,exTechName,exOC,exOP,exOtherName,
     customExtras,extraPay,basePay,total,note});
+  _markIOSAction(); // iOS Fix: prevent false lock after save
   save();
   ['l-pay-price','l-count','l-ex-hour-count','l-ex-hour-price','l-ex-case-count','l-ex-case-price','l-ex-tech-count','l-ex-tech-price','l-ex-other-count','l-ex-other-price','l-note','l-custom-unit'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const _cuF=document.getElementById('l-custom-unit-field');const _pgF=document.getElementById('pay-type-grid');
@@ -1674,11 +1676,13 @@ function renderShifts(){
   const getShiftTypeLbl = s => { if(s.payType==='custom'){ if(s.customUnit) return s.customUnit; const p=places.find(x=>x.id==s.placeId); return p&&p.customName?p.customName:(isEn?'other':'آخر'); } return PT[s.payType]||''; };
   el.innerHTML=list.map(s=>{
     const tags=[];
-    if(s.count)tags.push(`<span class="tag tc" dir="ltr">⏱️ ${s.count} ${getShiftTypeLbl(s)} × ${s.payPrice} ${getCurrency()}</span>`);
-    if(s.exHC) tags.push(`<span class="tag tv">⚡ ${s.exHC} ${s.exHourName||(isEn?'Extra Hours':'ساعات إضافية')}${s.exHP ? ` × ${(s.exHP).toLocaleString()} ${getCurrency()}` : ''}</span>`);
-    if(s.exCC) tags.push(`<span class="tag tg">🏥 ${s.exCC} ${s.exCaseName||(isEn?'Regular Cases':'حالات عادية')}${s.exCP ? ` × ${(s.exCP).toLocaleString()} ${getCurrency()}` : ''}</span>`);
-    if(s.exTC) tags.push(`<span class="tag to">🔬 ${s.exTC} ${s.exTechName||(isEn?'Technique':'تكنيك')}${s.exTP ? ` × ${(s.exTP).toLocaleString()} ${getCurrency()}` : ''}</span>`);
-    if(s.exOC) tags.push(`<span class="tag ty">🔷 ${s.exOC} ${s.exOtherName||(isEn?'Other Cases':'حالات أخرى')}${s.exOP ? ` × ${(s.exOP).toLocaleString()} ${getCurrency()}` : ''}</span>`);
+    const LRM = '\u200E'; // Left-to-Right Mark يثبت اتجاه الأرقام والرموز
+    const tagText = (count, unit, price, cur) => `${LRM}${count} ${unit} ${LRM}× ${LRM}${price} ${LRM}${cur}`;
+    if(s.count)tags.push(`<span class="tag tc" style="display:inline-block;direction:ltr;unicode-bidi:embed;">⏱️ ${tagText(s.count, getShiftTypeLbl(s), s.payPrice.toLocaleString(), getCurrency())}</span>`);
+    if(s.exHC) tags.push(`<span class="tag tv" style="display:inline-block;direction:ltr;unicode-bidi:embed;">⚡ ${s.exHC} ${s.exHourName||(isEn?'Extra Hours':'ساعات إضافية')}${s.exHP ? ` ${LRM}× ${LRM}${(s.exHP).toLocaleString()} ${LRM}${getCurrency()}` : ''}</span>`);
+    if(s.exCC) tags.push(`<span class="tag tg" style="display:inline-block;direction:ltr;unicode-bidi:embed;">🏥 ${s.exCC} ${s.exCaseName||(isEn?'Regular Cases':'حالات عادية')}${s.exCP ? ` ${LRM}× ${LRM}${(s.exCP).toLocaleString()} ${LRM}${getCurrency()}` : ''}</span>`);
+    if(s.exTC) tags.push(`<span class="tag to" style="display:inline-block;direction:ltr;unicode-bidi:embed;">🔬 ${s.exTC} ${s.exTechName||(isEn?'Technique':'تكنيك')}${s.exTP ? ` ${LRM}× ${LRM}${(s.exTP).toLocaleString()} ${LRM}${getCurrency()}` : ''}</span>`);
+    if(s.exOC) tags.push(`<span class="tag ty" style="display:inline-block;direction:ltr;unicode-bidi:embed;">🔷 ${s.exOC} ${s.exOtherName||(isEn?'Other Cases':'حالات أخرى')}${s.exOP ? ` ${LRM}× ${LRM}${(s.exOP).toLocaleString()} ${LRM}${getCurrency()}` : ''}</span>`);
     if(s.customExtras) s.customExtras.forEach(r=>{ if(r.count) tags.push(`<span class="tag ty">➕ ${r.count} ${r.name}</span>`); });
     if(s.note) tags.push(`<span class="tag ty">💬 ${s.note}</span>`);
     return `<div class="shift-item">
@@ -2622,6 +2626,11 @@ document.addEventListener('selectstart', e=>{
 });
 
 // ── 8) Anti Screenshot hint (visual only on mobile) ──
+// iOS Fix: track if user just performed an in-app action (save/add)
+// to avoid false lock when iOS briefly hides the app during dialogs
+let _iosLastAction = 0;
+function _markIOSAction(){ _iosLastAction = Date.now(); }
+
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
     document.body.style.filter='blur(20px)';
@@ -2629,6 +2638,11 @@ document.addEventListener('visibilitychange',()=>{
     setTimeout(()=>{ document.body.style.filter=''; }, 50);
     const phone   = localStorage.getItem('sj_lock_phone_h');
     if(!phone) return;
+
+    // iOS Fix: if the app returned to visible within 3 seconds of a user action,
+    // it was likely just a system dialog (keyboard, permission, etc.) — don't lock
+    if(Date.now() - _iosLastAction < 3000) return;
+
     // ① تحقق من sessionStorage أولاً (الأهم على iOS)
     const runtimeSession = sessionStorage.getItem('sj_runtime_session');
     if(runtimeSession && runtimeSession.length > 10) return;
@@ -2636,6 +2650,10 @@ document.addEventListener('visibilitychange',()=>{
     const session = localStorage.getItem('sj_lock_session');
     const st      = localStorage.getItem('sj_lock_st');
     if(session && session === st && session.length > 10) return;
+    // ③ iOS Fix: check short-lived localStorage token (set on login, lasts 5min)
+    const iosToken = localStorage.getItem('sj_ios_token');
+    const iosTokenTime = parseInt(localStorage.getItem('sj_ios_token_t') || '0');
+    if(iosToken && iosToken.length > 10 && Date.now() - iosTokenTime < 5 * 60 * 1000) return;
     // مفيش session صالح — اعرض اللوك
     showLockScreen();
   }
@@ -2678,6 +2696,9 @@ async function lockSubmit(){
     const sessionToken = await _sha256(inputHash + _SALT + 'session');
     // دايمًا نحفظ في sessionStorage (يشتغل على iOS)
     sessionStorage.setItem('sj_runtime_session', sessionToken);
+    // iOS Fix: short-lived localStorage token as extra fallback
+    localStorage.setItem('sj_ios_token', sessionToken);
+    localStorage.setItem('sj_ios_token_t', Date.now().toString());
     if(remember){
       localStorage.setItem('sj_lock_session', sessionToken);
       localStorage.setItem('sj_lock_st', sessionToken);
@@ -2693,6 +2714,9 @@ async function lockSubmit(){
       const sessionToken = await _sha256(savedHash + _SALT + 'session');
       // دايمًا نحفظ في sessionStorage (يشتغل على iOS)
       sessionStorage.setItem('sj_runtime_session', sessionToken);
+      // iOS Fix: short-lived localStorage token as extra fallback
+      localStorage.setItem('sj_ios_token', sessionToken);
+      localStorage.setItem('sj_ios_token_t', Date.now().toString());
       if(remember){
         localStorage.setItem('sj_lock_session', sessionToken);
         localStorage.setItem('sj_lock_st', sessionToken);
@@ -3041,7 +3065,16 @@ function renderStats(){
 // ══ CURRENCY ══
 function getCurrency(){
   const saved = localStorage.getItem('sj_currency') || 'ج|جنيه مصري';
-  return saved.split('|')[0];
+  const parts = saved.split('|');
+  // لو اللغة إنجليزي والعملة جنيه مصري، رجّع EGP
+  if(currentLang === 'en'){
+    const sym = parts[0];
+    const nameAr = parts[1] || '';
+    // map عربي → إنجليزي للرموز العربية
+    const symMap = {'ج':'EGP','ر.س':'SAR','د.إ':'AED','ج.م':'EGP','ج.س':'SDG','د.ك':'KWD','ر.ق':'QAR','د.ب':'BHD','ر.ع.':'OMR'};
+    return symMap[sym] || sym;
+  }
+  return parts[0];
 }
 function getCurrencyFull(){
   return localStorage.getItem('sj_currency') || 'ج|جنيه مصري';
