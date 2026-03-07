@@ -1348,6 +1348,8 @@ async function tryActivate(){
       _cacheSet('sj_activated','true');
       _cacheSet('sj_freemode','');
       await _saveActivatedCodeHash(code);
+      // ── حفظ التفعيل فوراً على Firebase ──
+      setTimeout(_fbSyncSave, 500);
       hideOverlay();
       document.getElementById('upgrade-banner').style.display='none';
       showToast('🎉 تم التفعيل! مرحباً بك في النسخة الكاملة');
@@ -1372,6 +1374,8 @@ function _activateSuccess(){
   localStorage.removeItem('sj_freemode');
   _cacheSet('sj_activated','true');
   _cacheSet('sj_freemode','');
+  // ── حفظ التفعيل فوراً على Firebase ──
+  setTimeout(_fbSyncSave, 500);
   hideOverlay();
   document.getElementById('upgrade-banner').style.display='none';
   showToast('🎉 تم التفعيل! مرحباً بك في النسخة الكاملة');
@@ -3690,10 +3694,20 @@ async function _fbSyncSave(){
     if(!window._fbCurrentUser) return;
     const uid = window._fbCurrentUser.uid;
     await window._fbSave(uid, {
+      // ── بيانات الشيفتات ──
       places:        JSON.stringify(places),
       shifts:        JSON.stringify(shifts),
       placeTax:      JSON.stringify(placeTax),
       placeDiscount: JSON.stringify(placeDiscount),
+      // ── بيانات التفعيل ──
+      activated:     localStorage.getItem('sj_activated')    || '',
+      freemode:      localStorage.getItem('sj_freemode')     || '',
+      act_code_h:    localStorage.getItem('sj_act_code_h')   || '',
+      act_code_raw:  localStorage.getItem('sj_act_code_raw') || '',
+      codes:         localStorage.getItem('sj_codes')        || '{}',
+      // ── إعدادات ──
+      lang:          localStorage.getItem('sj_lang')         || 'ar',
+      currency:      localStorage.getItem('sj_currency')     || '',
       updatedAt:     Date.now(),
     });
   } catch(e){ console.log('Firebase sync error:', e); }
@@ -3706,16 +3720,36 @@ async function _fbSyncLoad(){
     const uid  = window._fbCurrentUser.uid;
     const data = await window._fbLoad(uid);
     if(!data) return false;
+
+    // ── استعادة بيانات الشيفتات ──
     const p  = data.places        ? JSON.parse(data.places)        : [];
     const s  = data.shifts        ? JSON.parse(data.shifts)        : [];
     const pt = data.placeTax      ? JSON.parse(data.placeTax)      : {};
     const pd = data.placeDiscount ? JSON.parse(data.placeDiscount) : {};
-    // خد البيانات الأكثر — Cloud أو Local
     if(s.length >= shifts.length){
       places = p; shifts = s; placeTax = pt; placeDiscount = pd;
-      return true;
     }
-    return false;
+
+    // ── استعادة بيانات التفعيل ──
+    if(data.activated === 'true'){
+      isActivated = true; isFreeMode = false;
+      localStorage.setItem('sj_activated', 'true');
+      localStorage.removeItem('sj_freemode');
+      _cacheSet('sj_activated','true');
+    } else if(data.freemode === 'true'){
+      isFreeMode = true;
+      localStorage.setItem('sj_freemode', 'true');
+      _cacheSet('sj_freemode','true');
+    }
+    if(data.act_code_h)   { localStorage.setItem('sj_act_code_h',   data.act_code_h);   _cacheSet('sj_act_code_h',   data.act_code_h); }
+    if(data.act_code_raw) { localStorage.setItem('sj_act_code_raw', data.act_code_raw); _cacheSet('sj_act_code_raw', data.act_code_raw); }
+    if(data.codes && data.codes !== '{}') localStorage.setItem('sj_codes', data.codes);
+
+    // ── استعادة الإعدادات ──
+    if(data.lang)     localStorage.setItem('sj_lang',     data.lang);
+    if(data.currency) localStorage.setItem('sj_currency', data.currency);
+
+    return true;
   } catch(e){ return false; }
 }
 
@@ -3727,18 +3761,26 @@ window.save = async function(){
 };
 save = window.save;
 
+// ── نسخ احتياطي تلقائي كل 30 دقيقة على Firebase ──
+setInterval(()=>{ if(window._fbCurrentUser) _fbSyncSave(); }, 30 * 60 * 1000);
+
 // ── Firebase ready callback ──
 window._onFirebaseReady = async function(user){
   if(user){
-    // مسجل دخول ✅
     document.getElementById('fb-auth-screen').style.display = 'none';
-    // حمّل من Firebase وادمج مع البيانات المحلية
-    await _fbSyncLoad();
-    renderPlaces(); populateSels(); renderShifts(); renderSummary(); renderByPlace();
+    // حمّل من Firebase
+    const loaded = await _fbSyncLoad();
+    // أعد تشغيل checkActivation بعد استعادة بيانات التفعيل
+    checkActivation();
+    if(loaded){
+      renderPlaces(); populateSels(); renderShifts(); renderSummary(); renderByPlace();
+      renderStats();
+    }
     // أضف زر logout في الإعدادات
     _injectLogoutBtn(user.email);
+    // حفظ فوري على Firebase عشان يضمن البيانات المحلية متزامنة
+    setTimeout(_fbSyncSave, 2000);
   } else {
-    // مش مسجل دخول — ورّي شاشة Firebase
     document.getElementById('fb-auth-screen').style.display = 'flex';
   }
 };
