@@ -353,30 +353,30 @@
   .cdp-overlay{position:fixed;inset:0;background:rgba(6,11,20,0.85);z-index:99999;display:none;align-items:flex-end;justify-content:center;}
   .cdp-overlay.open{display:flex;}
   .cdp-box{background:#0d1525;border:1px solid rgba(0,229,255,0.2);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0 0 24px;-webkit-transform:translateZ(0);transform:translateZ(0);}
-  .cdp-header{background:linear-gradient(135deg,#3a1fa8,#0891b2);padding:22px 20px 18px;border-radius:24px 24px 0 0;text-align:center;}
-  .cdp-dow{font-size:.78rem;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
-  .cdp-fulldate{font-size:1.5rem;font-weight:900;color:#fff;}
-  .cdp-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;}
-  .cdp-nav-btn{background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2);color:var(--cyan);width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
+  .cdp-header{background:linear-gradient(135deg,#3a1fa8,#0891b2);padding:18px 20px 14px;border-radius:24px 24px 0 0;text-align:center;}
+  .cdp-dow{font-size:.72rem;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+  .cdp-fulldate{font-size:1.4rem;font-weight:900;color:#fff;}
+  .cdp-nav{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px;}
+  .cdp-nav-btn{background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2);color:var(--cyan);width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;flex-shrink:0;}
   .cdp-nav-btn:active{background:rgba(0,229,255,0.25);}
   .cdp-month-year{font-size:1rem;font-weight:800;color:var(--text);cursor:pointer;padding:6px 14px;border-radius:10px;border:1px solid rgba(0,229,255,0.15);background:rgba(0,229,255,0.05);}
   .cdp-month-year:active{background:rgba(0,229,255,0.15);}
-  .cdp-weekdays{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px;margin-bottom:4px;}
-  .cdp-weekdays span{text-align:center;font-size:.68rem;font-weight:700;color:var(--muted);padding:6px 0;text-transform:uppercase;}
-  .cdp-days{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px;gap:2px;}
-  .cdp-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.88rem;font-weight:700;color:var(--text);border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;}
+  .cdp-weekdays{display:grid;grid-template-columns:repeat(7,1fr);padding:0 10px;margin-bottom:2px;}
+  .cdp-weekdays span{text-align:center;font-size:.65rem;font-weight:700;color:var(--muted);padding:5px 0;text-transform:uppercase;}
+  .cdp-days{display:grid;grid-template-columns:repeat(7,1fr);padding:0 10px;gap:0;}
+  .cdp-day{height:42px;width:100%;display:flex;align-items:center;justify-content:center;font-size:.88rem;font-weight:700;color:var(--text);border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;}
   .cdp-day:active{background:rgba(0,229,255,0.2);}
   .cdp-day.today{border:1.5px solid rgba(0,229,255,0.5);color:var(--cyan);}
   .cdp-day.selected{background:linear-gradient(135deg,#7c3aed,#00e5ff);color:#fff;border:none;}
   .cdp-day.empty{cursor:default;}
   .cdp-day.other-month{color:rgba(255,255,255,0.2);}
-  .cdp-actions{display:flex;gap:10px;padding:16px 16px 0;justify-content:flex-end;}
+  .cdp-actions{display:flex;gap:10px;padding:14px 16px 0;justify-content:flex-end;}
   .cdp-cancel{background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--muted);padding:10px 22px;border-radius:12px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;}
   .cdp-confirm{background:linear-gradient(135deg,var(--violet),var(--cyan));border:none;color:#fff;padding:10px 28px;border-radius:12px;font-family:'Cairo',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;}
-  .cdp-fake-input{background:var(--s2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:13px 14px;color:var(--text);font-family:'Cairo',sans-serif;font-size:.9rem;font-weight:700;width:100%;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .25s;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+  .cdp-fake-input{background:var(--s2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:13px 14px;color:var(--text);font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:700;width:100%;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .25s;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;white-space:nowrap;overflow:hidden;}
   .cdp-fake-input:active,.cdp-fake-input:focus-within{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,255,0.08);background:var(--s3);}
-  .cdp-fake-input .cdp-ico{font-size:1rem;}
-  .cdp-fake-input .cdp-val{flex:1;}
+  .cdp-fake-input .cdp-ico{font-size:.9rem;flex-shrink:0;}
+  .cdp-fake-input .cdp-val{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   /* Month/Year picker */
   .cdp-my-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px 0;}
   .cdp-my-btn{padding:10px 6px;border-radius:10px;border:1px solid var(--border);background:var(--s2);color:var(--text);font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;}
@@ -3927,7 +3927,7 @@ function cdpConfirm(){
   // update display
   const dispValEl = document.getElementById(_cdp.displayId + '-val');
   if(dispValEl){
-    dispValEl.textContent = CDP_MONTHS_SHORT[_cdp.selected.getMonth()] + ' ' + d + ', ' + y + '  (' + CDP_DAYS[_cdp.selected.getDay()].slice(0,3) + ')';
+    dispValEl.textContent = cdpFmtDisplay(_cdp.selected);
   }
   // trigger preview update if log form
   if(_cdp.targetId === 'l-date'){
@@ -3939,6 +3939,15 @@ function cdpConfirm(){
   closeDatePicker();
 }
 
+// helper — format date for display (single line, short)
+function cdpFmtDisplay(date){
+  const d   = String(date.getDate()).padStart(2,'0');
+  const mon = CDP_MONTHS_SHORT[date.getMonth()];
+  const y   = date.getFullYear();
+  const dow = CDP_DAYS[date.getDay()].slice(0,3);
+  return mon + ' ' + d + ', ' + y + ' · ' + dow;
+}
+
 // initialise displays on page load for today's date
 function cdpInitDisplays(){
   const today = new Date();
@@ -3946,13 +3955,11 @@ function cdpInitDisplays(){
   const m = String(today.getMonth() + 1).padStart(2,'0');
   const d = String(today.getDate()).padStart(2,'0');
   const isoVal = y + '-' + m + '-' + d;
-  const dayName = CDP_DAYS[today.getDay()].slice(0,3);
-  const display = CDP_MONTHS_SHORT[today.getMonth()] + ' ' + d + ', ' + y + '  (' + dayName + ')';
   // l-date
   const lDate = document.getElementById('l-date');
   if(lDate){ lDate.value = isoVal; }
   const lDisp = document.getElementById('l-date-display-val');
-  if(lDisp){ lDisp.textContent = display; }
+  if(lDisp){ lDisp.textContent = cdpFmtDisplay(today); }
 }
 
 // patch editShift to update display after setting es-date value
@@ -3966,11 +3973,8 @@ function cdpInitDisplays(){
       const v = document.getElementById('es-date')?.value;
       if(!v) return;
       const d = new Date(v + 'T12:00:00');
-      const y = d.getFullYear();
-      const mo = String(d.getMonth()+1).padStart(2,'0');
-      const dd = String(d.getDate()).padStart(2,'0');
       const dispEl = document.getElementById('es-date-display-val');
-      if(dispEl) dispEl.textContent = CDP_MONTHS_SHORT[d.getMonth()] + ' ' + dd + ', ' + y + '  (' + CDP_DAYS[d.getDay()].slice(0,3) + ')';
+      if(dispEl) dispEl.textContent = cdpFmtDisplay(d);
     }, 0);
   };
 })();
