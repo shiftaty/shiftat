@@ -348,6 +348,42 @@
       -webkit-overflow-scrolling: touch;
     }
   }
+
+  /* ══ CUSTOM DATE PICKER ══ */
+  .cdp-overlay{position:fixed;inset:0;background:rgba(6,11,20,0.85);z-index:99999;display:none;align-items:flex-end;justify-content:center;}
+  .cdp-overlay.open{display:flex;}
+  .cdp-box{background:#0d1525;border:1px solid rgba(0,229,255,0.2);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:0 0 24px;-webkit-transform:translateZ(0);transform:translateZ(0);}
+  .cdp-header{background:linear-gradient(135deg,#3a1fa8,#0891b2);padding:22px 20px 18px;border-radius:24px 24px 0 0;text-align:center;}
+  .cdp-dow{font-size:.78rem;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .cdp-fulldate{font-size:1.5rem;font-weight:900;color:#fff;}
+  .cdp-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;}
+  .cdp-nav-btn{background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.2);color:var(--cyan);width:36px;height:36px;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;}
+  .cdp-nav-btn:active{background:rgba(0,229,255,0.25);}
+  .cdp-month-year{font-size:1rem;font-weight:800;color:var(--text);cursor:pointer;padding:6px 14px;border-radius:10px;border:1px solid rgba(0,229,255,0.15);background:rgba(0,229,255,0.05);}
+  .cdp-month-year:active{background:rgba(0,229,255,0.15);}
+  .cdp-weekdays{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px;margin-bottom:4px;}
+  .cdp-weekdays span{text-align:center;font-size:.68rem;font-weight:700;color:var(--muted);padding:6px 0;text-transform:uppercase;}
+  .cdp-days{display:grid;grid-template-columns:repeat(7,1fr);padding:0 12px;gap:2px;}
+  .cdp-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.88rem;font-weight:700;color:var(--text);border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s;}
+  .cdp-day:active{background:rgba(0,229,255,0.2);}
+  .cdp-day.today{border:1.5px solid rgba(0,229,255,0.5);color:var(--cyan);}
+  .cdp-day.selected{background:linear-gradient(135deg,#7c3aed,#00e5ff);color:#fff;border:none;}
+  .cdp-day.empty{cursor:default;}
+  .cdp-day.other-month{color:rgba(255,255,255,0.2);}
+  .cdp-actions{display:flex;gap:10px;padding:16px 16px 0;justify-content:flex-end;}
+  .cdp-cancel{background:transparent;border:1px solid rgba(255,255,255,0.15);color:var(--muted);padding:10px 22px;border-radius:12px;font-family:'Cairo',sans-serif;font-weight:700;font-size:.88rem;cursor:pointer;}
+  .cdp-confirm{background:linear-gradient(135deg,var(--violet),var(--cyan));border:none;color:#fff;padding:10px 28px;border-radius:12px;font-family:'Cairo',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;}
+  .cdp-fake-input{background:var(--s2);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:13px 14px;color:var(--text);font-family:'Cairo',sans-serif;font-size:.9rem;font-weight:700;width:100%;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .25s;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;}
+  .cdp-fake-input:active,.cdp-fake-input:focus-within{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,255,0.08);background:var(--s3);}
+  .cdp-fake-input .cdp-ico{font-size:1rem;}
+  .cdp-fake-input .cdp-val{flex:1;}
+  /* Month/Year picker */
+  .cdp-my-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px 0;}
+  .cdp-my-btn{padding:10px 6px;border-radius:10px;border:1px solid var(--border);background:var(--s2);color:var(--text);font-family:'Cairo',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;}
+  .cdp-my-btn.selected{background:linear-gradient(135deg,var(--violet),var(--cyan));border-color:transparent;color:#fff;}
+  .cdp-my-btn:active{opacity:.7;}
+  .cdp-yr-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;}
+  .cdp-yr-val{font-size:1.1rem;font-weight:800;color:var(--text);}
 </style>
 </head>
 <body>
@@ -600,7 +636,12 @@
           <label id="lbl-workplace">مكان العمل</label>
           <select id="l-place" onchange="onPlaceChange()"><option value="" id="lbl-select-place">اختر...</option></select>
         </div>
-        <div class="field"><label id="lbl-date">التاريخ</label><input type="date" id="l-date" lang="en"></div>
+        <div class="field"><label id="lbl-date">التاريخ</label>
+          <div class="cdp-fake-input" id="l-date-display" onclick="openDatePicker('l-date','l-date-display')">
+            <span class="cdp-ico">📅</span><span class="cdp-val" id="l-date-display-val">—</span>
+          </div>
+          <input type="hidden" id="l-date">
+        </div>
       </div>
       <div id="l-no-place" data-i18n-id="lbl-choose-first" style="color:var(--muted);font-size:.85rem;text-align:center;padding:22px 0;">⬆️ اختر مكان عمل أولاً</div>
       <div id="l-fields" style="display:none;">
@@ -878,7 +919,12 @@
     <div style="overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding-bottom:8px;">
       <div class="grid g2" style="margin-bottom:8px;">
         <div class="field"><label id="lbl-es-place">مكان العمل</label><select id="es-place"></select></div>
-        <div class="field"><label id="lbl-es-date">التاريخ</label><input type="date" id="es-date" lang="en"></div>
+        <div class="field"><label id="lbl-es-date">التاريخ</label>
+          <div class="cdp-fake-input" id="es-date-display" onclick="openDatePicker('es-date','es-date-display')">
+            <span class="cdp-ico">📅</span><span class="cdp-val" id="es-date-display-val">—</span>
+          </div>
+          <input type="hidden" id="es-date">
+        </div>
       </div>
       <div class="grid g2" style="margin-bottom:8px;">
         <div class="field"><label id="lbl-es-paytype">نوع الأجر</label>
@@ -3320,6 +3366,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     }
   });
   document.getElementById('l-date').value=new Date().toISOString().split('T')[0];
+  cdpInitDisplays();
   const now=new Date();
   const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   document.getElementById('s-month').value=ym;
@@ -3729,6 +3776,239 @@ function dismissRatingReminder(){
   if(banner){ banner.style.display = 'none'; }
 }
 
+// ══════════════════════════════════════════
+// CUSTOM DATE PICKER — always English
+// ══════════════════════════════════════════
+const CDP_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CDP_MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const CDP_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+let _cdp = {
+  targetId: null,       // hidden input id
+  displayId: null,      // fake display div id
+  year: 2026,
+  month: 0,             // 0-based
+  selected: null,       // Date object
+  viewMode: 'cal'       // 'cal' or 'my'
+};
+
+function openDatePicker(targetId, displayId){
+  _cdp.targetId  = targetId;
+  _cdp.displayId = displayId;
+  const hiddenEl = document.getElementById(targetId);
+  const val = hiddenEl ? hiddenEl.value : '';
+  const today = new Date();
+  if(val){
+    const d = new Date(val + 'T12:00:00');
+    _cdp.selected = d;
+    _cdp.year  = d.getFullYear();
+    _cdp.month = d.getMonth();
+  } else {
+    _cdp.selected = null;
+    _cdp.year  = today.getFullYear();
+    _cdp.month = today.getMonth();
+  }
+  _cdp.viewMode = 'cal';
+  document.getElementById('cdp-my-view').style.display = 'none';
+  document.getElementById('cdp-cal-view').style.display = 'block';
+  cdpRenderHeader();
+  cdpRenderCal();
+  document.getElementById('cdp-overlay').classList.add('open');
+}
+
+function closeDatePicker(){
+  document.getElementById('cdp-overlay').classList.remove('open');
+}
+
+function cdpOverlayClick(e){
+  if(e.target === document.getElementById('cdp-overlay')) closeDatePicker();
+}
+
+function cdpRenderHeader(){
+  const hdr = document.getElementById('cdp-fulldate');
+  const dow = document.getElementById('cdp-dow');
+  if(_cdp.selected){
+    dow.textContent  = CDP_DAYS[_cdp.selected.getDay()];
+    hdr.textContent  = CDP_MONTHS_SHORT[_cdp.selected.getMonth()] + ' ' + _cdp.selected.getDate() + ', ' + _cdp.selected.getFullYear();
+  } else {
+    dow.textContent  = '—';
+    hdr.textContent  = 'Select a date';
+  }
+}
+
+function cdpRenderCal(){
+  document.getElementById('cdp-month-year-lbl').textContent = CDP_MONTHS[_cdp.month] + ' ' + _cdp.year;
+  const container = document.getElementById('cdp-days');
+  container.innerHTML = '';
+  const today = new Date();
+  const firstDay = new Date(_cdp.year, _cdp.month, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(_cdp.year, _cdp.month + 1, 0).getDate();
+  // empty cells
+  for(let i = 0; i < firstDay; i++){
+    const e = document.createElement('div');
+    e.className = 'cdp-day empty';
+    container.appendChild(e);
+  }
+  for(let d = 1; d <= daysInMonth; d++){
+    const el = document.createElement('div');
+    el.className = 'cdp-day';
+    el.textContent = d;
+    const isToday = (d === today.getDate() && _cdp.month === today.getMonth() && _cdp.year === today.getFullYear());
+    const isSel   = _cdp.selected && (d === _cdp.selected.getDate() && _cdp.month === _cdp.selected.getMonth() && _cdp.year === _cdp.selected.getFullYear());
+    if(isSel)   el.classList.add('selected');
+    else if(isToday) el.classList.add('today');
+    el.addEventListener('click', ()=>{ cdpSelectDay(d); });
+    container.appendChild(el);
+  }
+}
+
+function cdpSelectDay(d){
+  _cdp.selected = new Date(_cdp.year, _cdp.month, d);
+  cdpRenderHeader();
+  cdpRenderCal();
+}
+
+function cdpPrevMonth(){
+  if(_cdp.month === 0){ _cdp.month = 11; _cdp.year--; }
+  else _cdp.month--;
+  cdpRenderCal();
+}
+
+function cdpNextMonth(){
+  if(_cdp.month === 11){ _cdp.month = 0; _cdp.year++; }
+  else _cdp.month++;
+  cdpRenderCal();
+}
+
+function cdpShowMonthPicker(){
+  _cdp.viewMode = 'my';
+  document.getElementById('cdp-cal-view').style.display = 'none';
+  document.getElementById('cdp-my-view').style.display  = 'block';
+  document.getElementById('cdp-yr-val').textContent = _cdp.year;
+  const grid = document.getElementById('cdp-months-grid');
+  grid.innerHTML = '';
+  CDP_MONTHS_SHORT.forEach((m, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'cdp-my-btn' + (i === _cdp.month ? ' selected' : '');
+    btn.textContent = m;
+    btn.addEventListener('click', ()=>{
+      _cdp.month = i;
+      _cdp.viewMode = 'cal';
+      document.getElementById('cdp-my-view').style.display  = 'none';
+      document.getElementById('cdp-cal-view').style.display = 'block';
+      cdpRenderCal();
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function cdpPrevYear(){
+  _cdp.year--;
+  document.getElementById('cdp-yr-val').textContent = _cdp.year;
+  // refresh selection highlights
+  const btns = document.querySelectorAll('.cdp-my-btn');
+  // no change needed, year stored in _cdp
+}
+
+function cdpNextYear(){
+  _cdp.year++;
+  document.getElementById('cdp-yr-val').textContent = _cdp.year;
+}
+
+function cdpConfirm(){
+  if(!_cdp.selected){ closeDatePicker(); return; }
+  const y = _cdp.selected.getFullYear();
+  const m = String(_cdp.selected.getMonth() + 1).padStart(2,'0');
+  const d = String(_cdp.selected.getDate()).padStart(2,'0');
+  const isoVal = y + '-' + m + '-' + d;
+  // set hidden input
+  const hiddenEl = document.getElementById(_cdp.targetId);
+  if(hiddenEl) hiddenEl.value = isoVal;
+  // update display
+  const dispValEl = document.getElementById(_cdp.displayId + '-val');
+  if(dispValEl){
+    dispValEl.textContent = CDP_MONTHS_SHORT[_cdp.selected.getMonth()] + ' ' + d + ', ' + y + '  (' + CDP_DAYS[_cdp.selected.getDay()].slice(0,3) + ')';
+  }
+  // trigger preview update if log form
+  if(_cdp.targetId === 'l-date'){
+    const evt = new Event('change');
+    if(hiddenEl) hiddenEl.dispatchEvent(evt);
+    // update preview if it exists
+    if(typeof calcPreview === 'function') calcPreview();
+  }
+  closeDatePicker();
+}
+
+// initialise displays on page load for today's date
+function cdpInitDisplays(){
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2,'0');
+  const d = String(today.getDate()).padStart(2,'0');
+  const isoVal = y + '-' + m + '-' + d;
+  const dayName = CDP_DAYS[today.getDay()].slice(0,3);
+  const display = CDP_MONTHS_SHORT[today.getMonth()] + ' ' + d + ', ' + y + '  (' + dayName + ')';
+  // l-date
+  const lDate = document.getElementById('l-date');
+  if(lDate){ lDate.value = isoVal; }
+  const lDisp = document.getElementById('l-date-display-val');
+  if(lDisp){ lDisp.textContent = display; }
+}
+
+// patch editShift to update display after setting es-date value
+(function(){
+  const _orig = window.editShift;
+  if(typeof _orig !== 'function') return;
+  window.editShift = function(id){
+    _orig.call(this, id);
+    // after original runs, update es-date display
+    setTimeout(()=>{
+      const v = document.getElementById('es-date')?.value;
+      if(!v) return;
+      const d = new Date(v + 'T12:00:00');
+      const y = d.getFullYear();
+      const mo = String(d.getMonth()+1).padStart(2,'0');
+      const dd = String(d.getDate()).padStart(2,'0');
+      const dispEl = document.getElementById('es-date-display-val');
+      if(dispEl) dispEl.textContent = CDP_MONTHS_SHORT[d.getMonth()] + ' ' + dd + ', ' + y + '  (' + CDP_DAYS[d.getDay()].slice(0,3) + ')';
+    }, 0);
+  };
+})();
+
 </script>
+
+<!-- ══ CUSTOM DATE PICKER OVERLAY ══ -->
+<div class="cdp-overlay" id="cdp-overlay" onclick="cdpOverlayClick(event)">
+  <div class="cdp-box" id="cdp-box">
+    <div class="cdp-header">
+      <div class="cdp-dow" id="cdp-dow">Saturday</div>
+      <div class="cdp-fulldate" id="cdp-fulldate">Select a date</div>
+    </div>
+    <div id="cdp-cal-view">
+      <div class="cdp-nav">
+        <button class="cdp-nav-btn" onclick="cdpPrevMonth()">‹</button>
+        <div class="cdp-month-year" id="cdp-month-year-lbl" onclick="cdpShowMonthPicker()">—</div>
+        <button class="cdp-nav-btn" onclick="cdpNextMonth()">›</button>
+      </div>
+      <div class="cdp-weekdays">
+        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+      </div>
+      <div class="cdp-days" id="cdp-days"></div>
+    </div>
+    <div id="cdp-my-view" style="display:none;">
+      <div class="cdp-yr-row">
+        <button class="cdp-nav-btn" onclick="cdpPrevYear()">‹</button>
+        <span class="cdp-yr-val" id="cdp-yr-val">2026</span>
+        <button class="cdp-nav-btn" onclick="cdpNextYear()">›</button>
+      </div>
+      <div class="cdp-my-grid" id="cdp-months-grid"></div>
+    </div>
+    <div class="cdp-actions">
+      <button class="cdp-cancel" onclick="closeDatePicker()">Cancel</button>
+      <button class="cdp-confirm" onclick="cdpConfirm()">Set ✓</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
