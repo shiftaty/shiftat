@@ -512,9 +512,7 @@
     <button id="install-android-btn" onclick="handleInstall('android')" style="flex:1;min-width:70px;background:linear-gradient(135deg,#1a73e8,#00e5ff);border:none;color:#fff;padding:7px 8px;border-radius:10px;font-family:Cairo,sans-serif;font-weight:800;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;">
       🤖 أندرويد
     </button>
-    <button id="install-ios-btn" onclick="showIosInstructions()" style="flex:1;min-width:70px;background:linear-gradient(135deg,#1c1c1e,#3a3a3c);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:7px 8px;border-radius:10px;font-family:Cairo,sans-serif;font-weight:800;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;">
-       iPhone
-    </button>
+
     <button id="install-desktop-btn" onclick="handleInstall('desktop')" style="flex:1;min-width:70px;background:linear-gradient(135deg,#7c3aed,#00e5ff);border:none;color:#fff;padding:7px 8px;border-radius:10px;font-family:Cairo,sans-serif;font-weight:800;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;">
       💻 كمبيوتر
     </button>
@@ -1532,10 +1530,6 @@ function shareApp(){
   }
 }
 
-function showIosInstructions(){
-  const el = document.getElementById('ios-instructions');
-  el.style.display = el.style.display==='none' ? 'block' : 'none';
-}
 
 // ── TABS ──
 function tab(name){
