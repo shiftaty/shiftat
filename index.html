@@ -1470,6 +1470,74 @@ let places   = [];
 let shifts   = [];
 let placeTax      = {};
 let placeDiscount = {};
+
+// ══════════════════════════════════════════════════════════════
+// ☁️ CLOUD SYNC — حفظ البيانات على السيرفر (ضمان 100%)
+// المستخدم بيتعرف بـ hash رقم التليفون بتاعه
+// حتى لو اتمسح كل حاجة من المتصفح، بياناته بترجع من السيرفر
+// ══════════════════════════════════════════════════════════════
+let _cloudUserId = null;
+let _cloudSyncTimer = null;
+const _CLOUD_DEBOUNCE_MS = 3000;
+
+async function _getCloudUserId(){
+  if(_cloudUserId) return _cloudUserId;
+  const phoneHash = await _idbGet('sj_lock_phone_h')
+                  || localStorage.getItem('sj_lock_phone_h');
+  if(!phoneHash) return null;
+  _cloudUserId = phoneHash.substring(0, 32);
+  return _cloudUserId;
+}
+
+function _scheduledCloudSync(){
+  if(_cloudSyncTimer) clearTimeout(_cloudSyncTimer);
+  _cloudSyncTimer = setTimeout(_doCloudSync, _CLOUD_DEBOUNCE_MS);
+}
+
+async function _doCloudSync(){
+  try{
+    const uid = await _getCloudUserId();
+    if(!uid) return;
+    const payload = {
+      action:    'cloudSave',
+      uid:       uid,
+      places:    JSON.stringify(places),
+      shifts:    JSON.stringify(shifts),
+      ptax:      JSON.stringify(placeTax),
+      pdisc:     JSON.stringify(placeDiscount),
+      activated: localStorage.getItem('sj_activated') || await _idbGet('sj_activated') || '',
+      freemode:  localStorage.getItem('sj_freemode')  || await _idbGet('sj_freemode')  || '',
+      lang:      localStorage.getItem('sj_lang')      || await _idbGet('sj_lang')      || 'ar',
+    };
+    await gasCall(payload);
+  }catch(e){}
+}
+
+async function _cloudLoad(){
+  try{
+    const uid = await _getCloudUserId();
+    if(!uid) return false;
+    const res = await gasCall({ action:'cloudLoad', uid });
+    if(!res || res.error) return false;
+    const serverShifts = JSON.parse(res.shifts || '[]');
+    const serverPlaces = JSON.parse(res.places || '[]');
+    if(serverShifts.length === 0 && serverPlaces.length === 0) return false;
+    if(shifts.length === 0 && places.length === 0){
+      places        = serverPlaces;
+      shifts        = serverShifts;
+      placeTax      = JSON.parse(res.ptax  || '{}');
+      placeDiscount = JSON.parse(res.pdisc || '{}');
+      await save();
+      if(res.activated){ localStorage.setItem('sj_activated', res.activated); _idbSet('sj_activated', res.activated).catch(()=>{}); isActivated = res.activated==='true'; }
+      if(res.freemode) { localStorage.setItem('sj_freemode',  res.freemode);  _idbSet('sj_freemode',  res.freemode).catch(()=>{});  isFreeMode  = res.freemode==='true';  }
+      if(res.lang)     { localStorage.setItem('sj_lang',      res.lang);      _idbSet('sj_lang',      res.lang).catch(()=>{});                                            }
+      return true;
+    }
+    return false;
+  }catch(e){ return false; }
+}
+// ══════════════════════════════════════════════════════════════
+
 async function save(){
   const p  = JSON.stringify(places);
   const s  = JSON.stringify(shifts);
@@ -1499,80 +1567,6 @@ async function save(){
   _scheduledCloudSync();
 }
 
-// ══════════════════════════════════════════════════════════════
-// ☁️ CLOUD SYNC — حفظ البيانات على السيرفر (ضمان 100%)
-// المستخدم بيتعرف بـ hash رقم التليفون بتاعه
-// حتى لو اتمسح كل حاجة من المتصفح، بياناته بترجع من السيرفر
-// ══════════════════════════════════════════════════════════════
-let _cloudUserId = null;   // hash رقم التليفون — بيتحسب مرة وبيتخزن
-let _cloudSyncTimer = null;
-const _CLOUD_DEBOUNCE_MS = 3000; // 3 ثواني بعد آخر تغيير
-
-// استخرج userId (hash رقم التليفون) من الـ session الحالية
-async function _getCloudUserId(){
-  if(_cloudUserId) return _cloudUserId;
-  // ارجع لـ IndexedDB أو localStorage
-  const phoneHash = await _idbGet('sj_lock_phone_h')
-                  || localStorage.getItem('sj_lock_phone_h');
-  if(!phoneHash) return null;
-  // استخدم الـ hash مباشرة كـ ID (مش هنعرف الرقم الحقيقي أبداً)
-  _cloudUserId = phoneHash.substring(0, 32); // أول 32 حرف من الـ SHA-256
-  return _cloudUserId;
-}
-
-// حفظ على السيرفر (بعد debounce)
-function _scheduledCloudSync(){
-  if(_cloudSyncTimer) clearTimeout(_cloudSyncTimer);
-  _cloudSyncTimer = setTimeout(_doCloudSync, _CLOUD_DEBOUNCE_MS);
-}
-
-async function _doCloudSync(){
-  try{
-    const uid = await _getCloudUserId();
-    if(!uid) return; // مستخدم لسه محدش دخل
-    const payload = {
-      action:   'cloudSave',
-      uid:      uid,
-      places:   JSON.stringify(places),
-      shifts:   JSON.stringify(shifts),
-      ptax:     JSON.stringify(placeTax),
-      pdisc:    JSON.stringify(placeDiscount),
-      activated: localStorage.getItem('sj_activated') || await _idbGet('sj_activated') || '',
-      freemode:  localStorage.getItem('sj_freemode')  || await _idbGet('sj_freemode')  || '',
-      lang:      localStorage.getItem('sj_lang')      || await _idbGet('sj_lang')      || 'ar',
-    };
-    await gasCall(payload);
-  }catch(e){ /* silent — offline أو سيرفر مش شغال */ }
-}
-
-// تحميل من السيرفر — بيتسمى لو البيانات المحلية فاضية
-async function _cloudLoad(){
-  try{
-    const uid = await _getCloudUserId();
-    if(!uid) return false;
-    const res = await gasCall({ action:'cloudLoad', uid });
-    if(!res || res.error) return false;
-    // لو في بيانات على السيرفر وأحدث من المحلية
-    const serverShifts = JSON.parse(res.shifts || '[]');
-    const serverPlaces = JSON.parse(res.places || '[]');
-    if(serverShifts.length === 0 && serverPlaces.length === 0) return false;
-    // لو المحلية فاضية → استعد من السيرفر
-    if(shifts.length === 0 && places.length === 0){
-      places        = serverPlaces;
-      shifts        = serverShifts;
-      placeTax      = JSON.parse(res.ptax  || '{}');
-      placeDiscount = JSON.parse(res.pdisc || '{}');
-      // احفظ محلياً عشان التاني مرة أسرع
-      await save();
-      // استعد الإعدادات
-      if(res.activated){ localStorage.setItem('sj_activated', res.activated); _idbSet('sj_activated', res.activated).catch(()=>{}); isActivated = res.activated==='true'; }
-      if(res.freemode) { localStorage.setItem('sj_freemode',  res.freemode);  _idbSet('sj_freemode',  res.freemode).catch(()=>{});  isFreeMode  = res.freemode==='true';  }
-      if(res.lang)     { localStorage.setItem('sj_lang',      res.lang);      _idbSet('sj_lang',      res.lang).catch(()=>{});                                            }
-      return true; // تم الاستعادة
-    }
-    return false;
-  }catch(e){ return false; }
-}
 // ══════════════════════════════════════════════════════════════
 function exportBackup(){
   const isEn = currentLang === 'en';
@@ -3435,11 +3429,11 @@ function hideLockScreen(){
   document.getElementById('lock-screen').style.display='none';
   // ☁️ حدّث الـ cloudUserId بعد الدخول مباشرةً
   _cloudUserId = null; // reset عشان يتحسب من جديد
-  _getCloudUserId().then(uid => {
-    if(uid && (shifts.length > 0 || places.length > 0)){
-      _scheduledCloudSync(); // تأكد إن البيانات متزامنة
-    }
-  });
+  // sync فوري بعد الدخول — بعد ثانيتين عشان _loadData يخلص أول
+  setTimeout(async ()=>{
+    const uid = await _getCloudUserId();
+    if(uid) _scheduledCloudSync();
+  }, 2000);
 }
 
 async function changeLockPhone(){
