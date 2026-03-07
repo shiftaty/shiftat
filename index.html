@@ -616,6 +616,10 @@
       🤖 أندرويد
     </button>
 
+    <button id="install-ios-btn" onclick="handleInstall('ios')" style="display:none;flex:1;min-width:70px;background:linear-gradient(135deg,#555,#aaa);border:none;color:#fff;padding:7px 8px;border-radius:10px;font-family:Cairo,sans-serif;font-weight:800;font-size:.72rem;cursor:pointer;align-items:center;justify-content:center;gap:4px;">
+       iPhone
+    </button>
+
     <button id="install-desktop-btn" onclick="handleInstall('desktop')" style="flex:1;min-width:70px;background:linear-gradient(135deg,#7c3aed,#00e5ff);border:none;color:#fff;padding:7px 8px;border-radius:10px;font-family:Cairo,sans-serif;font-weight:800;font-size:.72rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;">
       💻 كمبيوتر
     </button>
@@ -1704,7 +1708,6 @@ let deferredPrompt=null;
 // ── PWA Install ──
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();deferredPrompt=e;
-  // كشف نوع الجهاز
   const isMobile = /android/i.test(navigator.userAgent);
   document.getElementById('install-row').style.display='flex';
   if(isMobile){
@@ -1717,6 +1720,23 @@ window.addEventListener('appinstalled',()=>{
   document.getElementById('install-banner').classList.remove('show');
   showToast('✅ تم تثبيت التطبيق!');
 });
+
+// ── كشف iOS عند التحميل وإظهار زر iPhone ──
+(function detectIOS(){
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || 
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isStandalone = window.navigator.standalone === true;
+  if(isIOS && !isStandalone){
+    const btn = document.getElementById('install-ios-btn');
+    if(btn){ btn.style.display='flex'; }
+    // اخفي زر الاندرويد على iOS
+    const aBtn = document.getElementById('install-android-btn');
+    if(aBtn) aBtn.style.display='none';
+    const dBtn = document.getElementById('install-desktop-btn');
+    if(dBtn) dBtn.style.display='none';
+  }
+})();
+
 function installApp(){
   if(deferredPrompt){
     deferredPrompt.prompt();
@@ -1724,13 +1744,18 @@ function installApp(){
   }
 }
 function handleInstall(type){
+  if(type==='ios'){
+    // ورّي تعليمات iOS
+    const el = document.getElementById('ios-instructions');
+    if(el){ el.style.display = el.style.display==='none' ? 'block' : 'none'; }
+    return;
+  }
   if(type==='android' || type==='desktop'){
     if(deferredPrompt){
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then((result)=>{
         deferredPrompt = null;
         if(result.outcome === 'accepted'){
-          // اخفي الأزرار بعد القبول
           const row = document.getElementById('install-row');
           if(row) row.style.display = 'none';
           showToast('🎉 تم التثبيت بنجاح!');
@@ -2918,6 +2943,8 @@ function applyLang(){
   // ── INSTALL BUTTONS ──
   const androidBtn = document.getElementById('install-android-btn');
   if(androidBtn) androidBtn.innerHTML = isEn ? '🤖 Android' : '🤖 أندرويد';
+  const iosBtn = document.getElementById('install-ios-btn');
+  if(iosBtn) iosBtn.innerHTML = isEn ? ' iPhone' : ' iPhone';
   const desktopBtn = document.getElementById('install-desktop-btn');
   if(desktopBtn) desktopBtn.innerHTML = isEn ? '💻 Desktop' : '💻 كمبيوتر';
 
