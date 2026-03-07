@@ -716,7 +716,7 @@
   <div id="panel-shifts" class="panel">
     <div class="filter-row">
       <select id="f-place" onchange="renderShifts()"><option value="">كل الأماكن</option></select>
-      <input type="month" id="f-month" lang="en" onchange="renderShifts()">
+      <select id="f-month" onchange="renderShifts()" style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:'Cairo',sans-serif;font-size:16px;outline:none;-webkit-appearance:none;flex:1;direction:ltr;"></select>
       <button class="btn btn-out" onclick="clearFilters()">✕</button>
     </div>
     <div id="shifts-list"><div class="empty"><div class="ico">📋</div><p id="lbl-no-shifts-yet">لا يوجد شيفتات بعد</p></div></div>
@@ -739,7 +739,7 @@
       <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
         <div>
           <div style="font-size:.62rem;color:var(--muted);font-weight:700;margin-bottom:4px;" id="lbl-or-month">🗓️ أو اختر شهر</div>
-          <input type="month" id="s-month" lang="en" onchange="onMonthChange()" style="background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--text);font-family:Cairo,sans-serif;font-size:16px;outline:none;width:100%;box-sizing:border-box;">
+          <select id="s-month" onchange="onMonthChange()" style="background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:8px;color:var(--text);font-family:'Cairo',sans-serif;font-size:16px;outline:none;width:100%;box-sizing:border-box;-webkit-appearance:none;direction:ltr;"></select>
         </div>
         <div style="padding-top:18px;">
           <button class="btn btn-out" onclick="clearSummaryFilter()" id="all-time-lbl" style="white-space:nowrap;padding:8px 12px;font-size:.78rem;">كل الوقت</button>
@@ -792,7 +792,7 @@
           </div>
         </div>
         <div style="display:flex;gap:8px;">
-          <input type="month" id="bp-month" lang="en" onchange="onBpMonthChange()" style="flex:1;background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:9px 10px;color:var(--text);font-family:Cairo,sans-serif;font-size:16px;outline:none;">
+          <select id="bp-month" onchange="onBpMonthChange()" style="flex:1;background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:9px 10px;color:var(--text);font-family:'Cairo',sans-serif;font-size:16px;outline:none;-webkit-appearance:none;direction:ltr;"></select>
           <button class="btn btn-out" onclick="clearBpFilter()" id="lbl-bp-alltime" style="font-size:.75rem;padding:9px 12px;">كل الوقت</button>
         </div>
       </div>
@@ -1842,6 +1842,7 @@ function saveShift(){
     customExtras,extraPay,basePay,total,note});
   _markIOSAction(); // iOS Fix: prevent false lock after save
   save();
+  populateMonthSelects();
   ['l-pay-price','l-count','l-ex-hour-count','l-ex-hour-price','l-ex-case-count','l-ex-case-price','l-ex-tech-count','l-ex-tech-price','l-ex-other-count','l-ex-other-price','l-note','l-custom-unit'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   const _cuF=document.getElementById('l-custom-unit-field');const _pgF=document.getElementById('pay-type-grid');
   if(_cuF) _cuF.style.display='none';if(_pgF){_pgF.classList.remove('g4');_pgF.classList.add('g3');}
@@ -2591,12 +2592,14 @@ function applyLang(){
   document.documentElement.dir = isEn ? 'ltr' : 'rtl';
   document.documentElement.lang = currentLang;
 
-  // ── date/month inputs دايمًا إنجليزي بغض النظر عن لغة التطبيق ──
-  ['l-date','s-date-from','s-date-to','s-month','f-month','bp-date-from','bp-date-to','bp-month','es-date']
+  // ── date inputs دايمًا إنجليزي بغض النظر عن لغة التطبيق ──
+  ['l-date','s-date-from','s-date-to','bp-date-from','bp-date-to','es-date']
     .forEach(id => {
       const el = document.getElementById(id);
       if(el) el.lang = 'en';
     });
+  // ── month selects — refresh to keep English labels ──
+  populateMonthSelects();
 
   // ترجمة شاشة القفل
   applyLockLang();
@@ -2818,8 +2821,8 @@ function applyLang(){
   // ── iOS INSTRUCTIONS ──
   s('lbl-ios-ok', isEn ? 'OK ✓' : 'حسناً ✓');
 
-  // ── date/month inputs دايمًا إنجليزي بغض النظر عن لغة التطبيق ──
-  ['l-date','s-date-from','s-date-to','s-month','f-month','bp-date-from','bp-date-to','bp-month','es-date']
+  // ── date inputs دايمًا إنجليزي بغض النظر عن لغة التطبيق ──
+  ['l-date','s-date-from','s-date-to','bp-date-from','bp-date-to','es-date']
     .forEach(id => { const el = document.getElementById(id); if(el) el.lang = 'en'; });
 
   // ── DISCOUNT ROWS ──
@@ -3371,8 +3374,7 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   cdpInitDisplays();
   const now=new Date();
   const ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  document.getElementById('s-month').value=ym;
-  document.getElementById('f-month').value=ym;
+  populateMonthSelects(ym);
   renderPlaces();populateSels();
   loadCurrency();
   setTimeout(checkBackupReminder, 1500);
@@ -3778,9 +3780,40 @@ function dismissRatingReminder(){
   if(banner){ banner.style.display = 'none'; }
 }
 
-// ══════════════════════════════════════════
-// CUSTOM DATE PICKER — always English
-// ══════════════════════════════════════════
+// ══ MONTH SELECTS — always English ══
+const MONTH_NAMES_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function populateMonthSelects(selectedYm){
+  // collect all shifts months + current month
+  const monthSet = new Set();
+  const now = new Date();
+  // always include last 24 months
+  for(let i = 0; i < 24; i++){
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const ym = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    monthSet.add(ym);
+  }
+  // add any shift months outside range
+  shifts.forEach(s => { if(s.date) monthSet.add(s.date.substring(0,7)); });
+  const months = Array.from(monthSet).sort((a,b) => b.localeCompare(a));
+
+  ['s-month','f-month','bp-month'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const cur = sel.value || selectedYm || '';
+    sel.innerHTML = '<option value="">—</option>';
+    months.forEach(ym => {
+      const [y, m] = ym.split('-');
+      const opt = document.createElement('option');
+      opt.value = ym;
+      opt.textContent = MONTH_NAMES_EN[parseInt(m)-1] + ' ' + y;
+      sel.appendChild(opt);
+    });
+    if(cur) sel.value = cur;
+  });
+}
+
+
 const CDP_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const CDP_MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const CDP_DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
